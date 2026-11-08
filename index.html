@@ -940,11 +940,13 @@ function loadScript(src, cb) {
 if (IS_GAS) start();
 else {
   // GitHub Pages / ローカル：config.js（API の URL）→ Program.gs（おためし用）の順に読み込む
-  loadScript('config.js', function () {
+  // ?v= を付けて、ブラウザのキャッシュではなく いつも最新の設定を読む（月替わりですぐ反映されるように）
+  var v = '?v=' + Date.now();
+  loadScript('config.js' + v, function () {
     // Pages では同じ場所に、ローカル確認ではリポジトリの src/ にある
-    loadScript('Program.gs', function (ok) {
+    loadScript('Program.gs' + v, function (ok) {
       if (ok) return start();
-      loadScript('../src/Program.gs', function (ok2) {
+      loadScript('../src/Program.gs' + v, function (ok2) {
         if (!ok2) { document.getElementById('app').innerHTML = '<div class="loading">Program.gs が よみこめませんでした</div>'; return; }
         start();
       });
