@@ -301,6 +301,8 @@ function call(fn) {
       body: JSON.stringify({ key: LS.get('hw-key', ''), fn: fn, args: args })
     }).then(function (r) { return r.json(); }).then(function (j) {
       if (!j.ok) { var e = new Error(j.error); e.code = j.error; throw e; }
+      // 毎月の設定（タスク・キャラ・アイテム）は、この画面と一緒に公開している Program.gs を使う
+      if (j.data && typeof PROGRAM !== 'undefined') j.data.program = PROGRAM;
       return j.data;
     });
   }
@@ -630,7 +632,7 @@ function tapTask(id) {
   if (after !== before) { sound('level'); confetti(40); setTimeout(function () { levelUp(after); }, 500); }
   else if (dayStatus(d).complete) { sound('level'); confetti(45); toast('🎉 ぜんぶ できた！'); }
   else { sound('done'); confetti(14); toast(pick(P().cheers)); }
-  sync(call('addRecord', d, id));
+  sync(call('addRecord', d, id, t.label, t.stars || 1));
 }
 
 function chooseMood(m) {
@@ -943,7 +945,7 @@ else {
     loadScript('Program.gs', function (ok) {
       if (ok) return start();
       loadScript('../src/Program.gs', function (ok2) {
-        if (!ok2 && !apiUrl()) { document.getElementById('app').innerHTML = '<div class="loading">Program.gs が よみこめませんでした</div>'; return; }
+        if (!ok2) { document.getElementById('app').innerHTML = '<div class="loading">Program.gs が よみこめませんでした</div>'; return; }
         start();
       });
     });
