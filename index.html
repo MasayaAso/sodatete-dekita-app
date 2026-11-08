@@ -107,7 +107,7 @@
   .task .st { font-size: 15px; color: #C98A00; }
   .tag { display: inline-block; color: #fff; background: var(--accent); border-radius: 99px; padding: 2px 10px; font-size: 13px; font-weight: 900; white-space: nowrap; }
   .task .tag { position: absolute; top: 10px; left: 10px; }
-  .task { padding-top: 36px; }
+
   .task.done { background: var(--good-soft); box-shadow: 0 7px 0 #B8E6CB; }
   .task.done .ic { filter: saturate(.6); opacity: .55; }
   .task .stamp {
@@ -213,6 +213,100 @@
   .row { display: flex; gap: 10px; flex-wrap: wrap; }
   .row > * { flex: 1; min-width: 140px; }
   .muted { color: var(--sub); font-size: 13px; }
+
+  /* ---------- しばまるの にわ ---------- */
+  .hero2 { background: var(--card); border-radius: var(--radius); padding: 14px 14px 12px; box-shadow: 0 6px 0 var(--line); }
+  .hero2 .htop { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; margin-bottom: 6px; }
+  .hero2 h1 { margin: 0; font-size: 13px; color: var(--sub); font-weight: 700; }
+  .hero2 .name { font-size: 22px; font-weight: 900; }
+  .hero2 .name small { font-size: 14px; color: var(--sub); margin-left: 2px; }
+  .hero2 .meta { display: flex; gap: 6px; flex-shrink: 0; }
+  .hero2.mini { padding: 10px 14px; }
+  .hero2.mini .name { font-size: 18px; display: flex; align-items: center; gap: 4px; }
+  .barmsg { font-size: 12px; color: var(--sub); text-align: right; margin: 3px 2px 8px; }
+  .yard { position: relative; height: 210px; border-radius: 18px; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none;
+    background: linear-gradient(#9ED8FF 0, #D9F1FF 58%, #9BD67F 58%, #7FC463 100%); }
+  .yard.morning { background: linear-gradient(#FFD9B0 0, #FFF1DD 58%, #A5DA85 58%, #86C76A 100%); }
+  .yard.evening { background: linear-gradient(#FFB27A 0, #FFD8B5 58%, #8FC46F 58%, #74AE58 100%); }
+  .yard.night { background: linear-gradient(#1E2A55 0, #3B4A80 58%, #3E6B40 58%, #2F5532 100%); }
+  .yard .sky .sun { position: absolute; top: 12px; right: 18px; width: 38px; height: 38px; border-radius: 50%; background: #FFD84D; box-shadow: 0 0 20px #FFE680; }
+  .yard.evening .sky .sun { background: #FF8A3D; top: 60px; }
+  .yard.night .sky .sun { display: none; }
+  .yard .cloud { position: absolute; font-size: 34px; opacity: .9; animation: drift 40s linear infinite; }
+  .yard .cloud.c1 { top: 8px; } .yard .cloud.c2 { top: 46px; animation-delay: -20s; font-size: 26px; }
+  .yard.night .cloud { opacity: .25; }
+  .yard .deco span { position: absolute; line-height: 1; pointer-events: none; }
+  .yard .deco .moon { left: 82%; top: 12px; font-size: 30px; } .yard .deco .stars { left: 20%; top: 18px; font-size: 20px; }
+  .yard .dog { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); width: calc(86px * var(--size, 1)); text-align: center; cursor: grab; touch-action: none; z-index: 2; }
+  .yard .dogbody { position: relative; display: inline-block; font-size: calc(70px * var(--size, 1)); line-height: 1; transform-origin: 50% 100%; }
+  .yard .dogbody .face { display: inline-block; transition: transform .25s; }
+  .yard .dogbody .badge { top: -8px; right: -10px; }
+  .yard .dogbody .acc { top: -14px; left: -4px; }
+  .yard .shadow { width: 70%; height: 10px; margin: -4px auto 0; border-radius: 50%; background: rgba(0,0,0,.15); }
+  .yard .dog.walking .dogbody { animation: trot .3s ease-in-out infinite; }
+  @keyframes trot { 50% { transform: translateY(-7px) rotate(-3deg); } }
+  .yard .dog.sleep .dogbody { transform: rotate(-8deg) scaleY(.88); filter: saturate(.8) brightness(.95); }
+  .yard .bubble { position: absolute; bottom: 100%; left: 50%; transform: translate(-50%, 6px) scale(.6); background: #fff; border-radius: 16px; padding: 4px 10px; font-size: 18px; white-space: nowrap;
+    box-shadow: 0 3px 8px rgba(0,0,0,.15); opacity: 0; transition: .2s; pointer-events: none; margin-bottom: 4px; }
+  .yard .bubble.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  .yard .bubble::after { content: ''; position: absolute; left: 50%; top: 100%; border: 7px solid transparent; border-top-color: #fff; transform: translateX(-50%); }
+  .yard .yhint { position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; font-size: 12px; color: rgba(0,0,0,.45); transition: opacity .6s; pointer-events: none; }
+  .yard.night .yhint { color: rgba(255,255,255,.6); }
+  .yard .ball { position: absolute; bottom: 26px; font-size: 26px; opacity: 0; transform: translateX(-50%); pointer-events: none; z-index: 1; }
+  .yard .ball.show { opacity: 1; }
+  .yard .ball.fly { animation: toss .9s cubic-bezier(.3,.7,.5,1); }
+  @keyframes toss { 40% { bottom: 120px; } 100% { bottom: 26px; } }
+  .a-jump { animation: djump .6s ease; } @keyframes djump { 35% { transform: translateY(-46px) scale(1.06); } 70% { transform: translateY(0) scale(1.08,.92); } }
+  .a-happy { animation: wag .25s ease-in-out 5; } @keyframes wag { 50% { transform: rotate(8deg); } }
+  .a-sit { animation: sit 1.2s ease; } @keyframes sit { 20%, 80% { transform: scaleY(.82) translateY(4px); } }
+  .a-sniff { animation: sniff .4s ease-in-out 3; } @keyframes sniff { 50% { transform: translateY(6px) rotate(-6deg); } }
+  .a-eat { animation: eat .9s ease; }
+  .a-paw { animation: paw 1.4s ease; } @keyframes paw { 20%, 70% { transform: rotate(-14deg) translateY(-6px); } }
+  .a-spin { animation: spin 1s ease; } @keyframes spin { to { transform: rotate(360deg); } }
+  .a-roll { animation: roll 1.4s ease; } @keyframes roll { 30% { transform: rotate(90deg) translateY(10px); } 60% { transform: rotate(270deg) translateY(10px); } 100% { transform: rotate(360deg); } }
+  .a-dance { animation: dance 1.6s ease; } @keyframes dance { 15%, 45%, 75% { transform: rotate(-12deg) translateY(-10px); } 30%, 60%, 90% { transform: rotate(12deg); } }
+  .a-bang { animation: bang 1.6s ease forwards; } @keyframes bang { 15% { transform: translateY(-10px); } 40%, 85% { transform: rotate(90deg) translate(8px, 10px); } 100% { transform: rotate(0); } }
+  .petstatus { display: flex; align-items: center; gap: 6px; margin: 10px 0 8px; font-size: 13px; flex-wrap: wrap; }
+  .fbar { flex: 1; min-width: 50px; height: 10px; background: #F3EBDD; border-radius: 99px; overflow: hidden; }
+  .fbar > i { display: block; height: 100%; background: linear-gradient(90deg, #FFB3C8, var(--pink)); }
+  .flybone.drag { transition: none; transform: scale(1.2); }
+
+  /* ---------- さんすう ---------- */
+  .math-intro { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .mdog { font-size: 64px; line-height: 1; display: inline-block; }
+  .mdog.sm { font-size: 40px; }
+  .mdog.hop { animation: djump .6s ease; }
+  .dogmini { position: relative; display: inline-block; }
+  .dogmini .acc { position: absolute; top: -10px; left: -6px; font-size: .5em; transform: rotate(-16deg); }
+  .mbub { background: #fff; border-radius: 18px; padding: 10px 14px; font-size: 17px; box-shadow: 0 4px 0 var(--line); position: relative; }
+  .mbub.sm { font-size: 15px; padding: 6px 12px; box-shadow: none; background: var(--soft); }
+  .levels { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .level { background: var(--card); border-radius: var(--radius); padding: 16px 10px; box-shadow: 0 6px 0 var(--line); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .level b { font-size: 40px; } .level span { font-size: 17px; font-weight: 900; } .level small { color: var(--sub); font-size: 13px; }
+  .level:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--line); }
+  .mprog { display: flex; gap: 6px; justify-content: center; margin-bottom: 10px; }
+  .mprog i { width: 18px; height: 18px; border-radius: 50%; background: #EFE5D6; }
+  .mprog i.ok { background: var(--good); } .mprog i.now { background: var(--accent); transform: scale(1.2); }
+  .mq { text-align: center; }
+  .mlv { font-size: 14px; color: var(--sub); }
+  .expr { font-size: 52px; font-weight: 900; margin: 10px 0 4px; letter-spacing: 2px; white-space: nowrap; }
+  .expr .ans { display: inline-block; min-width: 1.6em; padding: 0 8px; border-radius: 14px; background: var(--soft); color: var(--accent); }
+  .expr .ans.right { background: var(--good-soft); color: var(--good); }
+  .expr .ans.teach { background: #FFF1B8; color: #C98A00; }
+  .expr .ans.shake { animation: shake .4s; } @keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+  .mhint { min-height: 26px; font-size: 20px; letter-spacing: 1px; color: var(--accent); word-break: break-all; }
+  .mhint .dots.b { color: var(--sky); } .mhint s { color: #CDBFA9; }
+  .msmall { display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 420px; margin: 0 auto; }
+  .keypad button { background: var(--card); border-radius: 18px; font-size: 32px; font-weight: 900; padding: 14px 0; box-shadow: 0 5px 0 var(--line); }
+  .keypad button:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line); }
+  .keypad .sub { background: #EFE5D6; } .keypad .go { background: var(--accent); color: #fff; font-size: 20px; }
+  .math-result { text-align: center; } .math-result .big-pet { font-size: 90px; }
+  .math-result .q { font-size: 22px; font-weight: 900; margin: 8px 0; }
+  .math-result .acts { display: flex; gap: 10px; }
+  .math-result .acts button { flex: 1; padding: 14px; border-radius: 16px; font-size: 17px; font-weight: 900; }
+  .math-result .yes { background: var(--accent); color: #fff; } .math-result .no { background: #F1E8DA; }
+  .rstars { font-size: 34px; letter-spacing: 4px; }
 
   /* ---------- 共通：ダイアログ・トースト・紙吹雪 ---------- */
   .overlay { position: fixed; inset: 0; background: rgba(60,40,20,.35); display: grid; place-items: center; z-index: 50; padding: 16px; }
@@ -369,27 +463,29 @@ function render() {
   document.title = P().appTitle;
   var html = '';
   if (VIEW === 'today') html = viewToday();
+  else if (VIEW === 'math') html = viewMath();
   else if (VIEW === 'week') html = viewWeek();
-  else if (VIEW === 'letter') html = viewLetter();
   else if (VIEW === 'adult') html = ADULT_OK ? viewAdult() : '';
+  if (YARD && YARD.parentNode) YARD.parentNode.removeChild(YARD);
   document.getElementById('app').innerHTML = html;
+  attachYard();
   renderTabs();
-  if (VIEW === 'letter') LS.set('hw-read', DATA.comments.reduce(function (a, c) { return c.ts > a ? c.ts : a; }, LS.get('hw-read', '')));
+  if (VIEW === 'week') LS.set('hw-read', DATA.comments.reduce(function (a, c) { return c.ts > a ? c.ts : a; }, LS.get('hw-read', '')));
 }
 
 function renderTabs() {
   var tabs = document.getElementById('tabs');
   tabs.hidden = false;
-  var un = VIEW === 'letter' ? 0 : unreadCount();
+  var un = VIEW === 'week' ? 0 : unreadCount();
   var items = [
     ['today', '📝', 'きょう'],
-    ['week', '📅', 'こんげつ'],
-    ['letter', un ? '<span class="wiggle">💌</span>' : '💌', 'おてがみ'],
+    ['math', '🔢', 'さんすう'],
+    ['week', un ? '<span class="wiggle">💌</span>' : '📅', 'こんげつ'],
     ['adult', '🔒', 'おとなよう']
   ];
   tabs.innerHTML = items.map(function (it) {
     return '<button class="' + (VIEW === it[0] ? 'on' : '') + '" onclick="go(\'' + it[0] + '\')"><b>' + it[1] + '</b>' + it[2] +
-      (it[0] === 'letter' && un ? '<span class="dot"></span>' : '') + '</button>';
+      (it[0] === 'week' && un ? '<span class="dot"></span>' : '') + '</button>';
   }).join('');
 }
 
@@ -403,17 +499,25 @@ function heroHtml() {
   var st = monthStars(), sg = stageOf(st), pct = 100, msg = 'さいごまで そだったよ！';
   if (sg.next) { pct = Math.round((st - sg.cur.at) / (sg.next.at - sg.cur.at) * 100); msg = 'あと ★' + (sg.next.at - st) + ' で そだつよ'; }
   var sk = streak();
-  return '<div class="hero">' +
-    '<div class="pet" id="pet" onclick="petTap()">' + petHtml(sg.cur) + '</div>' +
-    '<div><h1>' + esc(P().monthTitle) + '</h1>' +
-    '<div class="name">' + esc(P().character.name) + '（' + esc(sg.cur.title) + '）</div>' +
-    '<div class="bar"><i style="width:' + Math.max(4, pct) + '%"></i></div>' +
-    '<div class="meta"><span class="chip">⭐ こんげつ ' + st + '</span><span>' + msg + '</span>' +
-    (sk > 0 ? '<span class="chip">🔥 ' + sk + 'にち れんぞく</span>' : '') + '</div></div>' +
-    '<div class="petbar"><button class="pbtn bone" id="boneBtn" onclick="feedPet()">🦴 ×' + bonesLeft() + '<small>あげる</small></button>' +
-    '<span class="tummy" title="おなか">' + tummyHtml() + '</span>' +
-    '<button class="pbtn" onclick="openBox()">🎁<small>たからばこ</small></button></div>' +
+  return '<div class="hero2">' +
+    '<div class="htop"><div><h1>' + esc(P().monthTitle) + '</h1>' +
+    '<div class="name">' + esc(P().character.name) + '<small>（' + esc(sg.cur.title) + '）</small></div></div>' +
+    '<div class="meta"><span class="chip">⭐ ' + st + '</span>' + (sk > 0 ? '<span class="chip">🔥 ' + sk + 'にち</span>' : '') + '</div></div>' +
+    '<div class="bar"><i style="width:' + Math.max(4, pct) + '%"></i></div><div class="barmsg">' + msg + '</div>' +
+    '<div id="yardSlot"></div>' +
+    '<div class="petstatus" id="petStatus">' + petStatusHtml() + '</div>' +
+    '<div class="petbar">' +
+    '<button class="pbtn bone" id="boneBtn" onpointerdown="boneDown(event)">🦴 <span id="boneCount">×' + bonesLeft() + '</span></button>' +
+    '<span class="tummy" id="tummy" title="おなか">' + tummyHtml() + '</span>' +
+    '<button class="pbtn" onclick="throwBall()">🎾</button>' +
+    '<button class="pbtn" onclick="openTricks()">🎓</button>' +
+    '<button class="pbtn" onclick="openBox()">🎁</button></div>' +
     '</div>';
+}
+function miniHero() {
+  var st = monthStars(), sg = stageOf(st), pct = sg.next ? Math.round((st - sg.cur.at) / (sg.next.at - sg.cur.at) * 100) : 100;
+  return '<div class="hero2 mini"><div class="htop"><div class="name">' + dogFaceHtml() + ' ' + esc(P().character.name) + '<small>（' + esc(sg.cur.title) + '）</small></div>' +
+    '<div class="meta"><span class="chip">⭐ こんげつ ' + st + '</span></div></div><div class="bar"><i style="width:' + Math.max(4, pct) + '%"></i></div></div>';
 }
 function tummyHtml() {
   var n = fedToday(), f = fullAt(), s = '';
@@ -451,13 +555,13 @@ function viewToday() {
 }
 
 function viewWeek() {
-  var ws = weekStart(DATA.today), ws_st = weekStars(ws), goal = P().weeklyGoal, h = heroHtml();
+  var ws = weekStart(DATA.today), ws_st = weekStars(ws), goal = P().weeklyGoal, h = miniHero();
   var pct = Math.min(100, Math.round(ws_st / goal.stars * 100)), got = ws_st >= goal.stars;
   h += '<div class="day-head"><h2>こんげつの きろく</h2></div>';
   h += '<div class="card"><div class="goal-row"><span>⭐ こんしゅう</span><span><span class="num">' + ws_st + '</span> / ' + goal.stars + '</span></div>' +
     '<div class="bar"><i style="width:' + Math.max(4, pct) + '%"></i></div>' +
     '<div class="reward' + (got ? ' got' : '') + '">🎁 ' + (got ? 'ごほうび ゲット！ ' : 'あと ★' + (goal.stars - ws_st) + ' で ごほうび：') + esc(goal.reward) + '</div></div>';
-  return h + monthTable();
+  return h + lettersHtml() + monthTable();
 }
 
 /** こんげつの ひょう：たて＝ひにち、よこ＝カテゴリー。しゅうの くぎりに ★ の小計 */
@@ -499,15 +603,361 @@ function monthTable() {
   return h;
 }
 
-function viewLetter() {
+function lettersHtml() {
   var last = LS.get('hw-read', '');
   var cs = DATA.comments.slice().sort(function (a, b) { return a.ts < b.ts ? 1 : -1; });
-  var h = '<div class="day-head"><h2>💌 おてがみ</h2></div>';
-  if (!cs.length) return h + '<div class="rest">まだ おてがみは ないよ。<br>しゅくだいを がんばると とどくかも…？</div>';
-  return h + cs.map(function (c) {
-    return '<div class="letter' + (c.ts > last ? ' new' : '') + '"><div class="from">' + esc(c.author) + ' より ・ ' + md(c.week) + ' の しゅう</div>' +
+  var h = '<div class="card"><h3>💌 ママ・パパからの おてがみ</h3>';
+  if (!cs.length) return h + '<div class="muted">まだ おてがみは ないよ。がんばると とどくかも…？</div></div>';
+  return h + cs.slice(0, 6).map(function (c) {
+    return '<div class="letter' + (c.ts > last ? ' new' : '') + '"><div class="from">' + esc(c.author) + ' より ・ ' + md(c.week) + ' の しゅう' + (c.ts > last ? ' 🆕' : '') + '</div>' +
       '<div class="txt">' + esc(c.text) + '</div></div>';
+  }).join('') + '</div>';
+}
+
+/* =====================================================================
+ *  しばまるの にわ（ずっと 生きている ペット）
+ *  - にわは 1回だけ つくって、画面を かきかえても 同じ ものを つかいまわす
+ *    （そうしないと しばまるの いち や うごきが まいかい リセットされるため）
+ *  - しばまるは じぶんで あるく・すわる・においを かぐ・ねる・おねだり する
+ *  - こどもは なでる（こする）・タップ・ボールなげ・ほねを ひっぱって あげる・げいを させる
+ * ===================================================================== */
+var DOG = { x: 50, dir: -1, busy: false, sleeping: false, lastTouch: Date.now(), timer: null, carry: false };
+var YARD = null;
+
+function hourNow() { return new Date().getHours(); }
+function isNight() { var h = hourNow(); return h >= 20 || h < 6; }
+function skyClass() { var h = hourNow(); return h >= 20 || h < 6 ? 'night' : h < 9 ? 'morning' : h >= 16 ? 'evening' : 'day'; }
+function dogStage() { return stageOf(monthStars()).cur; }
+function friendship() {
+  var pts = allStars() + petRows('feed').length * 2 + LS.get('hw-play', 0);
+  return { lv: 1 + Math.floor(pts / 20), pct: (pts % 20) * 5, pts: pts };
+}
+function daysTogether() {
+  var first = DATA.records.reduce(function (a, r) { return !a || r.date < a ? r.date : a; }, '') || DATA.today;
+  return Math.round((parseD(DATA.today) - parseD(first)) / 86400000) + 1;
+}
+function tricks() { return (P().pet && P().pet.tricks) || []; }
+
+function buildYard() {
+  YARD = document.createElement('div');
+  YARD.className = 'yard';
+  YARD.innerHTML =
+    '<div class="sky"><span class="sun"></span><span class="cloud c1">☁️</span><span class="cloud c2">☁️</span></div>' +
+    '<div class="deco" id="yardDeco"></div>' +
+    '<div class="ball" id="ball">🎾</div>' +
+    '<div class="dog" id="dog"><div class="bubble" id="bubble"></div><div class="dogbody" id="pet"></div><div class="shadow"></div></div>' +
+    '<div class="yhint" id="yhint">なでなで してね 👆</div>';
+  var dog = YARD.querySelector('#dog');
+  // なでる（こする）とタップ
+  var down = null, moved = 0, rubHearts = 0, lastX = 0, lastY = 0;
+  dog.addEventListener('pointerdown', function (e) { down = Date.now(); moved = 0; rubHearts = 0; lastX = e.clientX; lastY = e.clientY; try { dog.setPointerCapture(e.pointerId); } catch (x) {} });
+  dog.addEventListener('pointermove', function (e) {
+    if (!down) return;
+    moved += Math.abs(e.clientX - lastX) + Math.abs(e.clientY - lastY); lastX = e.clientX; lastY = e.clientY;
+    if (moved > 70 * (rubHearts + 1)) {
+      rubHearts++; hearts(document.getElementById('pet'), 1); sound('pet');
+      if (DOG.sleeping) dogWake();
+      dogAnim('happy'); dogSay(rubHearts > 3 ? '😊' : '💕', 900);
+      if (rubHearts === 5) { addPlay(1); toast(pick(['きもちいい〜', 'もっと なでて〜', 'しあわせ〜'])); }
+    }
+  });
+  function up() {
+    if (!down) return;
+    var tap = moved < 12; down = null;
+    if (tap) dogTap();
+  }
+  dog.addEventListener('pointerup', up); dog.addEventListener('pointercancel', function () { down = null; });
+  return YARD;
+}
+
+/** render() のあとに よぶ：にわを いまの がめんに はめこむ */
+function attachYard() {
+  var slot = document.getElementById('yardSlot');
+  if (!slot) { stopDogLoop(); return; }
+  if (!YARD) buildYard();
+  slot.appendChild(YARD);
+  refreshYard();
+  startDogLoop();
+}
+function refreshYard() {
+  if (!YARD) return;
+  YARD.className = 'yard ' + skyClass();
+  var st = dogStage(), item = wornItem();
+  var face = (st.emoji === '🐾' ? '🐶' : st.emoji);
+  var body = document.getElementById('pet');
+  body.innerHTML = '<span class="face">' + face + '</span>' + (st.badge ? '<span class="badge">' + st.badge + '</span>' : '') + (item ? '<span class="acc">' + item.emoji + '</span>' : '');
+  var dog = document.getElementById('dog');
+  dog.style.left = DOG.x + '%';
+  dog.style.setProperty('--size', st.size || 1);
+  body.querySelector('.face').style.transform = 'scaleX(' + (DOG.dir > 0 ? -1 : 1) + ')';
+  var deco = (P().pet && P().pet.yard) || [];
+  document.getElementById('yardDeco').innerHTML = deco.map(function (d, i) {
+    return '<span style="left:' + [4, 80, 30, 88][i % 4] + '%;bottom:' + [38, 44, 10, 70][i % 4] + 'px;font-size:' + [44, 34, 22, 40][i % 4] + 'px">' + d + '</span>';
+  }).join('') + (isNight() ? '<span class="moon">🌙</span><span class="stars">✨</span>' : '');
+  dog.classList.toggle('sleep', DOG.sleeping);
+}
+
+function startDogLoop() {
+  if (DOG.timer) return;
+  if (isNight()) dogSleep(true);
+  DOG.timer = setInterval(dogThink, 2600);
+}
+function stopDogLoop() { if (DOG.timer) { clearInterval(DOG.timer); DOG.timer = null; } }
+
+/** しばまるが じぶんで かんがえて うごく */
+function dogThink() {
+  if (!document.getElementById('dog') || DOG.busy || DOG.sleeping) return;
+  var idle = Date.now() - DOG.lastTouch;
+  if (isNight() || idle > 120000) { if (Math.random() < 0.5) dogSleep(); return; }
+  var r = Math.random();
+  if (r < 0.42) dogWalkTo(10 + Math.random() * 78, 1100);
+  else if (r < 0.55) { dogAnim('sit'); }
+  else if (r < 0.66) { dogSay(pick(['👃', '🐾', '🎵', '❓']), 1300); dogAnim('sniff'); }
+  else if (r < 0.76) { dogAnim('happy'); }
+  else dogAsk();
+}
+/** おねだり：いま できる ことを しばまるが おしえて くれる */
+function dogAsk() {
+  var d = DATA.today, s = dayStatus(d), left = tasksFor(d).filter(function (t) { return !isDone(d, t.id); });
+  if (bonesLeft() > 0 && fedToday() < fullAt()) return dogSay('🦴？', 2200);
+  if (left.length) return dogSay(left[0].icon + '？', 2200);
+  if (s.complete) return dogSay('🌳？', 2200);
+  dogSay('🎾？', 2200);
+}
+function dogSay(text, ms) {
+  var b = document.getElementById('bubble'); if (!b) return;
+  b.textContent = text; b.classList.add('show');
+  clearTimeout(b._t); b._t = setTimeout(function () { b.classList.remove('show'); }, ms || 1400);
+}
+function dogAnim(name, ms) {
+  var body = document.getElementById('pet'); if (!body) return;
+  body.className = 'dogbody'; void body.offsetWidth; body.classList.add('a-' + name);
+  clearTimeout(body._t); body._t = setTimeout(function () { body.className = 'dogbody'; }, ms || 1200);
+}
+function dogFace(dir) {
+  DOG.dir = dir; var f = document.querySelector('#pet .face');
+  if (f) f.style.transform = 'scaleX(' + (dir > 0 ? -1 : 1) + ')';
+}
+function dogWalkTo(x, ms, cb) {
+  var dog = document.getElementById('dog'); if (!dog) return;
+  x = Math.max(6, Math.min(90, x));
+  dogFace(x > DOG.x ? 1 : -1);
+  dog.style.transition = 'left ' + ms + 'ms ease-in-out';
+  dog.classList.add('walking');
+  DOG.x = x; dog.style.left = x + '%';
+  setTimeout(function () { dog.classList.remove('walking'); if (cb) cb(); }, ms);
+}
+function dogSleep(quiet) {
+  DOG.sleeping = true; var dog = document.getElementById('dog'); if (dog) dog.classList.add('sleep');
+  dogSay('💤', 600000);
+  if (!quiet) sound('pet');
+}
+function dogWake() {
+  DOG.sleeping = false; var dog = document.getElementById('dog'); if (dog) dog.classList.remove('sleep');
+  var b = document.getElementById('bubble'); if (b) b.classList.remove('show');
+}
+function touchDog() { DOG.lastTouch = Date.now(); var h = document.getElementById('yhint'); if (h) h.style.opacity = 0; }
+function addPlay(n) { LS.set('hw-play', LS.get('hw-play', 0) + n); }
+
+/** タップ：おきる・ジャンプ・ワン！ */
+function dogTap() {
+  touchDog();
+  if (DOG.sleeping) { dogWake(); dogAnim('jump'); dogSay(isNight() ? 'ねむい…' : '❗', 1200); sound('pet'); return; }
+  dogAnim('jump'); sound('pet'); hearts(document.getElementById('pet'), 2);
+  dogSay(pick(['ワン！', 'ワンワン！', '🎵', '😆', 'なあに？']), 1200);
+}
+function petTap() { dogTap(); }
+
+/** ボールなげ：とおくへ なげると とって くる */
+function throwBall() {
+  if (DOG.busy) return;
+  touchDog(); if (DOG.sleeping) dogWake();
+  DOG.busy = true;
+  var ball = document.getElementById('ball'), target = DOG.x > 50 ? 8 + Math.random() * 25 : 62 + Math.random() * 28;
+  ball.style.transition = 'none'; ball.style.left = DOG.x + '%'; ball.className = 'ball show';
+  void ball.offsetWidth;
+  ball.style.transition = 'left .9s cubic-bezier(.2,.6,.4,1)'; ball.classList.add('fly'); ball.style.left = target + '%';
+  sound('step'); dogSay('❗', 700); dogAnim('sit', 600);
+  setTimeout(function () {
+    ball.classList.remove('fly');
+    dogWalkTo(target, 900, function () {
+      ball.className = 'ball'; dogSay('🎾', 1500); sound('done');
+      dogWalkTo(50, 1100, function () {
+        dogFace(-1); dogAnim('happy'); hearts(document.getElementById('pet'), 3);
+        dogSay(pick(['とってきた！', 'もう いっかい！', 'ワン！']), 1400);
+        addPlay(1); DOG.busy = false; updatePetBar();
+      });
+    });
+  }, 950);
+}
+
+/** げい：おぼえた げいを させる */
+function openTricks() {
+  touchDog();
+  var st = allStars();
+  var list = tricks().map(function (t) {
+    if (st < t.at) return '<div class="box-item lock"><b>❓</b>あと ⭐' + (t.at - st) + '</div>';
+    return '<button class="box-item" data-trick="' + esc(t.id) + '"><b>' + trickIcon(t.anim) + '</b>' + esc(t.name) + '</button>';
   }).join('');
+  var nx = tricks().filter(function (t) { return t.at > st; })[0];
+  var o = overlay('<div class="q">🎓 しばまるの げい</div>' +
+    '<div class="muted">' + (nx ? 'つぎの げい「' + esc(nx.name) + '」まで あと ⭐' + (nx.at - st) : 'ぜんぶ おぼえたよ！') + '</div>' +
+    '<div class="box-grid">' + list + '</div><div class="acts"><button class="yes">とじる</button></div>');
+  o.querySelector('.yes').onclick = function () { o.remove(); };
+  [].forEach.call(o.querySelectorAll('[data-trick]'), function (b) {
+    b.onclick = function () { o.remove(); doTrick(b.getAttribute('data-trick')); };
+  });
+}
+function trickIcon(a) { return { sit: '🪑', paw: '🐾', jump: '⤴️', spin: '🌀', roll: '🔄', dance: '💃', bang: '💥' }[a] || '⭐'; }
+function doTrick(id) {
+  var t = tricks().filter(function (x) { return x.id === id; })[0]; if (!t) return;
+  if (DOG.sleeping) dogWake();
+  DOG.busy = true;
+  dogWalkTo(50, 600, function () {
+    dogFace(-1); dogSay('「' + t.name + '」', 1500);
+    setTimeout(function () {
+      dogAnim(t.anim, 1600); sound(t.anim === 'bang' ? 'level' : 'done');
+      if (t.anim === 'paw') dogSay('🐾', 1200);
+      if (t.anim === 'dance') dogSay('🎵🎶', 1500);
+      setTimeout(function () { hearts(document.getElementById('pet'), 3); DOG.busy = false; addPlay(1); updatePetBar(); toast(pick(['じょうず！', 'できたね！', 'てんさい しばけん！'])); }, 1600);
+    }, 500);
+  });
+}
+
+/** ほねを ゆびで ひっぱって しばまるに あげる（タップでも あげられる） */
+function boneDown(e) {
+  var btn = e.currentTarget, sx = e.clientX, sy = e.clientY, ghost = null;
+  function mv(ev) {
+    if (!ghost && Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) > 10) {
+      if (!bonesLeft() || fedToday() >= fullAt()) return;
+      ghost = document.createElement('div'); ghost.className = 'flybone drag'; ghost.textContent = '🦴'; document.body.appendChild(ghost);
+      if (DOG.sleeping) dogWake();
+      dogSay('🦴！', 1500);
+    }
+    if (ghost) { ghost.style.left = (ev.clientX - 17) + 'px'; ghost.style.top = (ev.clientY - 20) + 'px'; ev.preventDefault(); }
+  }
+  function upf(ev) {
+    document.removeEventListener('pointermove', mv); document.removeEventListener('pointerup', upf);
+    if (!ghost) return feedPet();
+    var p = document.getElementById('pet').getBoundingClientRect(); ghost.remove();
+    var hit = ev.clientX > p.left - 30 && ev.clientX < p.right + 30 && ev.clientY > p.top - 30 && ev.clientY < p.bottom + 30;
+    if (hit) feedPet(true); else dogSay('こっち こっち！', 1200);
+  }
+  document.addEventListener('pointermove', mv, { passive: false }); document.addEventListener('pointerup', upf);
+}
+
+/** なかよし度・ほね・おなかの 表示だけを かきかえる（にわは そのまま） */
+function updatePetBar() {
+  var el = document.getElementById('petStatus'); if (el) el.innerHTML = petStatusHtml();
+  var b = document.getElementById('boneCount'); if (b) b.textContent = '×' + bonesLeft();
+  var t = document.getElementById('tummy'); if (t) t.innerHTML = tummyHtml();
+}
+function petStatusHtml() {
+  var f = friendship();
+  return '<span class="chip">💗 なかよし Lv.' + f.lv + '</span><span class="fbar"><i style="width:' + Math.max(4, f.pct) + '%"></i></span>' +
+    '<span class="chip">📅 いっしょに ' + daysTogether() + 'にちめ</span>';
+}
+
+/* =====================================================================
+ *  さんすう タブ：アプリの なかで もんだいを とく
+ * ===================================================================== */
+var MATH = null;
+function mathCfg() { return P().math || { count: 10, levels: [{ kind: 'add10', icon: '➕', name: 'たしざん', sub: '10まで' }] }; }
+function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+function makeQ(kind) {
+  if (kind === 'mix') kind = pick(['add10', 'sub10', 'add20', 'sub20']);
+  var a, b;
+  if (kind === 'add10') { a = rnd(1, 9); b = rnd(1, 10 - a); return { a: a, b: b, op: '+', ans: a + b }; }
+  if (kind === 'sub10') { a = rnd(2, 10); b = rnd(1, a - 1); return { a: a, b: b, op: '−', ans: a - b }; }
+  if (kind === 'add20') { a = rnd(2, 9); b = rnd(11 - a, 9); return { a: a, b: b, op: '+', ans: a + b }; }
+  a = rnd(11, 18); b = rnd(a - 9, 9); if (b <= a - 10) b = a - 9; return { a: a, b: b, op: '−', ans: a - b };
+}
+function startMath(i) {
+  var lv = mathCfg().levels[i], qs = [], key = {};
+  while (qs.length < (mathCfg().count || 10)) {
+    var q = makeQ(lv.kind), k = q.a + q.op + q.b;
+    if (key[k] && Object.keys(key).length < 30) continue;
+    key[k] = 1; qs.push(q);
+  }
+  MATH = { lv: lv, qs: qs, i: 0, input: '', correct: 0, missed: false, done: false, lock: false };
+  render();
+}
+function viewMath() {
+  var cfg = mathCfg(), t = P().tasks.filter(function (x) { return x.math; })[0];
+  var doneToday = t && isDone(DATA.today, t.id);
+  var h = '<div class="day-head"><h2>🔢 さんすう</h2>' + (MATH ? '<button class="pill-btn" onclick="MATH=null;render()">やめる</button>' : '') + '</div>';
+  if (!MATH) {
+    h += '<div class="math-intro"><span class="mdog">' + dogFaceHtml() + '</span><div class="mbub">' +
+      (doneToday ? 'きょうの さんすう できたね！<br>もっと やっても いいよ 🎵' : 'どれに ちょうせん する？<br>' + (cfg.count || 10) + 'もん とけたら ⭐と 🦴！') + '</div></div>';
+    h += '<div class="levels">' + cfg.levels.map(function (lv, i) {
+      return '<button class="level" onclick="startMath(' + i + ')"><b>' + lv.icon + '</b><span>' + esc(lv.name) + '</span><small>' + esc(lv.sub || '') + '</small></button>';
+    }).join('') + '</div>';
+    return h;
+  }
+  if (MATH.done) {
+    var n = MATH.qs.length, c = MATH.correct;
+    return h + '<div class="card math-result"><div class="big-pet">' + dogFaceHtml() + '</div>' +
+      '<div class="q">' + n + 'もん中 ' + c + 'もん<br>いっかいで せいかい！</div>' +
+      '<div class="rstars">' + '⭐'.repeat(Math.max(1, Math.round(c / n * 5))) + '</div>' +
+      '<div class="muted" style="margin:8px 0 14px">' + (c === n ? 'ぜんもん せいかい！ しばまるも びっくり！' : c >= n * 0.7 ? 'すごい！ その ちょうし！' : 'さいごまで がんばったね！') + '</div>' +
+      '<div class="acts"><button class="no" onclick="MATH=null;render()">ほかの もんだい</button><button class="yes" onclick="go(\'today\')">きょうに もどる</button></div></div>';
+  }
+  var q = MATH.qs[MATH.i];
+  h += '<div class="mprog">' + MATH.qs.map(function (_, i) { return '<i class="' + (i < MATH.i ? 'ok' : i === MATH.i ? 'now' : '') + '"></i>'; }).join('') + '</div>';
+  h += '<div class="card mq"><div class="mlv">' + MATH.lv.icon + ' ' + esc(MATH.lv.name) + '　' + (MATH.i + 1) + '/' + MATH.qs.length + '</div>' +
+    '<div class="expr">' + q.a + ' ' + q.op + ' ' + q.b + ' = <span class="ans" id="ans">' + (MATH.input || '？') + '</span></div>' +
+    '<div class="mhint" id="mhint"></div>' +
+    '<div class="msmall"><span class="mdog sm" id="mdog">' + dogFaceHtml() + '</span><span class="mbub sm" id="mbub">がんばれ〜！</span></div></div>';
+  h += '<div class="keypad">' + [7, 8, 9, 4, 5, 6, 1, 2, 3].map(function (k) { return '<button onclick="mkey(' + k + ')">' + k + '</button>'; }).join('') +
+    '<button class="sub" onclick="mkey(\'del\')">⌫</button><button onclick="mkey(0)">0</button><button class="go" onclick="mkey(\'ok\')">こたえる</button></div>';
+  return h;
+}
+function dogFaceHtml() { var st = dogStage(), it = wornItem(); return '<span class="dogmini">' + (st.emoji === '🐾' ? '🐶' : st.emoji) + (it ? '<span class="acc">' + it.emoji + '</span>' : '') + '</span>'; }
+function mkey(k) {
+  if (!MATH || MATH.lock) return;
+  if (k === 'del') MATH.input = MATH.input.slice(0, -1);
+  else if (k === 'ok') return mcheck();
+  else if (MATH.input.length < 2) MATH.input += String(k);
+  sound('step');
+  var a = document.getElementById('ans'); if (a) a.textContent = MATH.input || '？';
+}
+function mcheck() {
+  if (!MATH.input) return;
+  var q = MATH.qs[MATH.i], ok = Number(MATH.input) === q.ans, a = document.getElementById('ans'), bub = document.getElementById('mbub'), dg = document.getElementById('mdog');
+  if (ok) {
+    if (!MATH.missed) MATH.correct++;
+    sound('done'); a.classList.add('right'); bub.textContent = pick(['せいかい！', 'すごい！', 'ワン！ ワン！', 'てんさい！']);
+    dg.classList.remove('hop'); void dg.offsetWidth; dg.classList.add('hop'); confetti(6);
+    MATH.lock = true;
+    setTimeout(nextQ, 800);
+  } else if (!MATH.missed) {
+    MATH.missed = true; MATH.input = ''; sound('pet');
+    a.textContent = '？'; a.classList.add('shake'); setTimeout(function () { a.classList.remove('shake'); }, 500);
+    bub.textContent = 'おしい！ もう いちど';
+  } else {
+    // 2かいめも ちがったら、こたえと ヒントを みせて つぎへ（しからない）
+    MATH.lock = true; a.textContent = q.ans; a.classList.add('teach');
+    bub.textContent = 'こたえは ' + q.ans + ' だよ。つぎ いこう！';
+    document.getElementById('mhint').innerHTML = dotsHint(q);
+    setTimeout(nextQ, 2600);
+  }
+}
+function dotsHint(q) {
+  if (q.op === '+') return '<span class="dots">' + '●'.repeat(q.a) + '</span> ＋ <span class="dots b">' + '●'.repeat(q.b) + '</span>';
+  return '<span class="dots">' + '●'.repeat(q.ans) + '<s>' + '●'.repeat(q.b) + '</s></span>';
+}
+function nextQ() {
+  MATH.i++; MATH.input = ''; MATH.missed = false; MATH.lock = false;
+  if (MATH.i >= MATH.qs.length) { MATH.done = true; finishMath(); }
+  render();
+}
+function finishMath() {
+  sound('level'); confetti(40);
+  var t = P().tasks.filter(function (x) { return x.math; })[0], d = DATA.today;
+  if (t && tasksFor(d).indexOf(t) >= 0 && !isDone(d, t.id)) {
+    var label = t.label + '（' + MATH.lv.name + ' ' + MATH.correct + '/' + MATH.qs.length + '）';
+    setTimeout(function () { markDone(d, t, label, true); }, 300);
+  }
 }
 
 /* ---------- おとなよう ---------- */
@@ -621,18 +1071,25 @@ function tapTask(id) {
     });
     return;
   }
+  // さんすうは「さんすう」タブで もんだいを とくと できた！になる（きょうの ぶんだけ）
+  if (t.math && d === DATA.today) { MATH = null; go('math'); return; }
+  markDone(d, t, t.label, false);
+}
+function markDone(d, t, label, fromMath) {
+  var id = t.id;
   var before = stageOf(monthStars()).cur, itemsBefore = itemsUnlockedAt(allStars()).length;
   DATA.records.push({ date: d, taskId: id, stars: t.stars || 1, ts: new Date().toISOString() });
-  render();
+  if (!fromMath) render(); else updatePetBar();
   var el = document.querySelector('[data-task="' + id + '"]');
   if (el) { el.classList.add('just'); floatPlus(el, '+' + '⭐'.repeat(t.stars || 1) + '🦴'); }
-  var pet = document.getElementById('pet'); if (pet) { pet.classList.remove('jump'); void pet.offsetWidth; pet.classList.add('jump'); }
+  if (!fromMath) { touchDog(); if (DOG.sleeping) dogWake(); dogAnim('jump'); dogSay(t.icon + '！', 1400); }
   var after = stageOf(monthStars()).cur, newItems = itemsUnlockedAt(allStars()).slice(itemsBefore);
   if (newItems.length) setTimeout(function () { foundItem(newItems[newItems.length - 1]); }, after !== before ? 2600 : 700);
   if (after !== before) { sound('level'); confetti(40); setTimeout(function () { levelUp(after); }, 500); }
   else if (dayStatus(d).complete) { sound('level'); confetti(45); toast('🎉 ぜんぶ できた！'); }
+  else if (fromMath) { toast('🔢 さんすう できた！ +⭐🦴'); }
   else { sound('done'); confetti(14); toast(pick(P().cheers)); }
-  sync(call('addRecord', d, id, t.label, t.stars || 1));
+  sync(call('addRecord', d, id, label, t.stars || 1));
 }
 
 function chooseMood(m) {
@@ -672,38 +1129,37 @@ function sync(promise) {
   });
 }
 
-function petTap() {
-  var pet = document.getElementById('pet'); pet.classList.remove('jump'); void pet.offsetWidth; pet.classList.add('jump');
-  sound('pet');
-  var sg = stageOf(monthStars());
-  hearts(pet, 3);
-  toast(sg.next ? pick(['ワン！', 'なでなで うれしい！', 'しゅくだい まってるよ！', 'はやく おおきく なりたいな', 'ほね ほしいな〜']) : 'いつも ありがとう！');
-}
 
-/** ほねを あげる：ボタンから しばまるへ ほねが とんでいき、もぐもぐ */
-function feedPet() {
+/** ほねを あげる：ボタンから しばまるへ ほねが とんでいき、もぐもぐ（dropped = ゆびで はこんで きた） */
+function feedPet(dropped) {
   var pet = document.getElementById('pet'), btn = document.getElementById('boneBtn');
-  if (!bonesLeft()) { sound('pet'); return toast('「できた！」で ほねが もらえるよ 🦴'); }
-  if (fedToday() >= fullAt()) { sound('pet'); petJump(); return toast('おなか いっぱい！ また あしたね 💤'); }
+  touchDog(); if (DOG.sleeping) dogWake();
+  if (!bonesLeft()) { sound('pet'); dogSay('🦴…？', 1500); return toast('「できた！」で ほねが もらえるよ 🦴'); }
+  if (fedToday() >= fullAt()) { sound('pet'); dogAnim('happy'); dogSay('おなか いっぱい', 1500); return toast('おなか いっぱい！ また あしたね'); }
   DATA.pet = DATA.pet || [];
   DATA.pet.push({ date: DATA.today, kind: 'feed', value: '', ts: new Date().toISOString() });
-  var b = btn.getBoundingClientRect(), p = pet.getBoundingClientRect();
-  var fb = document.createElement('div'); fb.className = 'flybone'; fb.textContent = '🦴';
-  fb.style.left = (b.left + 6) + 'px'; fb.style.top = (b.top - 4) + 'px';
-  document.body.appendChild(fb);
-  requestAnimationFrame(function () { requestAnimationFrame(function () {
-    fb.style.left = (p.left + p.width / 2 - 17) + 'px'; fb.style.top = (p.top + p.height / 2 - 10) + 'px'; fb.style.transform = 'rotate(360deg) scale(.7)';
-  }); });
-  setTimeout(function () {
-    fb.remove(); render();
-    var pet2 = document.getElementById('pet'); pet2.classList.remove('eat'); void pet2.offsetWidth; pet2.classList.add('eat');
-    sound('eat'); hearts(pet2, 5);
-    if (fedToday() >= fullAt()) { setTimeout(function () { sound('level'); confetti(24); toast('おなか いっぱい！ しっぽ ぶんぶん！'); }, 500); }
+  DOG.busy = true;
+  function eat() {
+    updatePetBar(); dogAnim('eat', 1100); dogSay('😋', 1200);
+    sound('eat'); hearts(document.getElementById('pet'), 5);
+    setTimeout(function () { DOG.busy = false; }, 1100);
+    if (fedToday() >= fullAt()) { setTimeout(function () { sound('level'); confetti(24); dogAnim('happy'); toast('おなか いっぱい！ しっぽ ぶんぶん！'); }, 900); }
     else toast(pick(['もぐもぐ… おいしい！', 'ワン！ ありがとう！', 'カリカリ… うまうま！', 'もう 1ぽん ほしいな〜']));
-  }, 600);
+  }
+  if (dropped === true || !btn || !pet) eat();
+  else {
+    var b = btn.getBoundingClientRect(), p = pet.getBoundingClientRect();
+    var fb = document.createElement('div'); fb.className = 'flybone'; fb.textContent = '🦴';
+    fb.style.left = (b.left + 6) + 'px'; fb.style.top = (b.top - 4) + 'px';
+    document.body.appendChild(fb);
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      fb.style.left = (p.left + p.width / 2 - 17) + 'px'; fb.style.top = (p.top + p.height / 2 - 10) + 'px'; fb.style.transform = 'rotate(360deg) scale(.7)';
+    }); });
+    setTimeout(function () { fb.remove(); eat(); }, 600);
+  }
   sync(call('feedPet', DATA.today));
 }
-function petJump() { var pet = document.getElementById('pet'); if (pet) { pet.classList.remove('jump'); void pet.offsetWidth; pet.classList.add('jump'); } }
+function petJump() { dogAnim('jump'); }
 function hearts(el, n) {
   if (!el) return;
   var r = el.getBoundingClientRect();
