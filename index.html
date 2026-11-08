@@ -386,6 +386,7 @@
  *  google.script.run が無い環境（ローカルでファイルを開いたとき）は
  *  「おためしモード」になり、ブラウザ内にデータを保存して動きます。
  * ===================================================================== */
+var APP_BUILD = '20261108072458';   // 公開時に npm run publish:web が日時に書きかえる
 var IS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
 var DATA = null, VIEW = 'today', SELECTED = null, ADULT_OK = false, ADULT_WEEK = null, MONTH = null;
 var audioCtx = null;
@@ -1608,6 +1609,14 @@ else {
   // GitHub Pages / ローカル：config.js（API の URL）→ Program.gs（おためし用）の順に読み込む
   // ?v= を付けて、ブラウザのキャッシュではなく いつも最新の設定を読む（月替わりですぐ反映されるように）
   var v = '?v=' + Date.now();
+  // 新しい版が公開されていたら、ブラウザに残っている古い画面を自動で読み直す
+  // （APP_BUILD は npm run publish:web が公開のたびに書き込む。version.js はキャッシュしない）
+  loadScript('version.js' + v, function () {
+    var latest = window.APP_BUILD_LATEST;
+    if (latest && APP_BUILD !== 'dev' && latest !== APP_BUILD && location.search.indexOf('b=' + latest) < 0) {
+      location.replace(location.pathname + '?b=' + latest);
+    }
+  });
   loadScript('config.js' + v, function () {
     // Pages では同じ場所に、ローカル確認ではリポジトリの src/ にある
     loadScript('Program.gs' + v, function (ok) {
