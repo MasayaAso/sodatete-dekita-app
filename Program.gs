@@ -6,7 +6,7 @@
  *  - 毎月の変更は このファイルだけ。`npm run deploy` で 画面と いっしょに GitHub Pages へ（Apps Script は さわらない）
  *  - 子どもに見せる文字は「ひらがな＋1年生で習ったカタカナ・漢字」で書きます。
  *  - タスクは 4つで 固定です。id は変えないでください（記録の集計に使います）。
- *      shukudai … がっこうの しゅくだい（ひとまとめで 1こ）
+ *      shukudai … がっこうの しゅくだい（ひとまとめで 1こ。まいにち。ない ひも「やった」で OK）
  *      razkids  … ラズキッズ（えいご）
  *      dokusho  … どくしょ ノート
  *      sansu    … さんすう（math: true … アプリの「さんすう」タブで もんだいを とくと できた！になる）
@@ -27,23 +27,25 @@ var PROGRAM = {
 
   // 毎日のしゅくだい
   tasks: [
-    { id: 'shukudai', label: 'しゅくだい',      icon: '🎒', stars: 1, days: [1, 2, 3, 4, 5], hint: 'がっこうの しゅくだい ぜんぶ' },
+    { id: 'shukudai', label: 'しゅくだい',      icon: '🎒', stars: 1,                         hint: 'ない ひは「やった」で OK！' },
     { id: 'razkids',  label: 'ラズキッズ',      icon: '🔤', stars: 1,                         hint: 'えいごの ほんを よもう' },
     { id: 'dokusho',  label: 'どくしょ ノート', icon: '📒', stars: 1,                         hint: 'よんだ ほんを かこう' },
     { id: 'sansu',    label: 'さんすう',        icon: '🔢', stars: 1, math: true,             hint: 'もんだいに ちょうせん！' }
   ],
 
-  // さんすう タブ（1かいで count もん。とくと「さんすう」が できた！に なる）
-  //  kind: add10 = 10までの たしざん / sub10 = 10までの ひきざん /
-  //        add20 = くりあがりの たしざん / sub20 = くりさがりの ひきざん / mix = まぜまぜ
+  // さんすう タブ：まいにち ちがう「おはなしの もんだい（ぶんしょうだい）」が でる
+  //  1かいで count もん。とくと「さんすう」が できた！に なる
+  //  kind: add = ふえると いくつ / sub = のこりは いくつ / cmp = ちがいは いくつ / mix = まぜまぜ
+  //  max:  10 = こたえや かずが 10まで / 20 = くりあがり・くりさがり（11〜18）
   math: {
-    count: 10,
+    count: 5,
     levels: [
-      { kind: 'add10', icon: '➕', name: 'たしざん',             sub: '10まで' },
-      { kind: 'sub10', icon: '➖', name: 'ひきざん',             sub: '10まで' },
-      { kind: 'add20', icon: '🔼', name: 'くりあがりの たしざん', sub: '8 ＋ 5 など' },
-      { kind: 'sub20', icon: '🔽', name: 'くりさがりの ひきざん', sub: '13 − 6 など' },
-      { kind: 'mix',   icon: '🎲', name: 'まぜまぜ',             sub: 'ぜんぶ でる' }
+      { kind: 'add', max: 10, icon: '➕', name: 'ふえると いくつ',   sub: 'たしざんの おはなし' },
+      { kind: 'sub', max: 10, icon: '➖', name: 'のこりは いくつ',   sub: 'ひきざんの おはなし' },
+      { kind: 'cmp', max: 10, icon: '⚖️', name: 'ちがいは いくつ',   sub: 'くらべる おはなし' },
+      { kind: 'add', max: 20, icon: '🔼', name: 'くりあがりの おはなし', sub: '8 ＋ 5 など' },
+      { kind: 'sub', max: 20, icon: '🔽', name: 'くりさがりの おはなし', sub: '13 − 6 など' },
+      { kind: 'mix', max: 20, icon: '🎲', name: 'まぜまぜ',         sub: 'ぜんぶ でる' }
     ]
   },
 
@@ -85,21 +87,21 @@ var PROGRAM = {
   ],
 
   // 月の ★ で そだつ キャラクター（at = その月に あつめた ★ の数。おおきさも かわる）
-  // 11月の よてい★：へいじつ 21日×4 ＋ どにち 9日×3 ＝ 111
+  // 11月の よてい★：30日×4 ＝ 120
   character: {
     name: 'しばまる',
     stages: [
       { at: 0,   emoji: '🐶', title: 'あかちゃん しばけん', size: 0.75 },
-      { at: 15,  emoji: '🐶', title: 'こいぬ',             size: 0.9 },
-      { at: 45,  emoji: '🐕', title: 'げんきな しばけん',   size: 1.0 },
-      { at: 75,  emoji: '🐕', badge: '🎀', title: 'おしゃれ しばけん', size: 1.12 },
-      { at: 105, emoji: '🐕', badge: '👑', title: 'しばけん キング',   size: 1.25 }
+      { at: 18,  emoji: '🐶', title: 'こいぬ',             size: 0.9 },
+      { at: 48,  emoji: '🐕', title: 'げんきな しばけん',   size: 1.0 },
+      { at: 84,  emoji: '🐕', badge: '🎀', title: 'おしゃれ しばけん', size: 1.12 },
+      { at: 115, emoji: '🐕', badge: '👑', title: 'しばけん キング',   size: 1.25 }
     ]
   },
 
-  // 1しゅうかんの もくひょう と ごほうび（1しゅうかんの よてい★：5日×4 ＋ 2日×3 ＝ 26）
+  // 1しゅうかんの もくひょう と ごほうび（1しゅうかんの よてい★：7日×4 ＝ 28）
   weeklyGoal: {
-    stars: 22,
+    stars: 24,
     reward: 'にちようびに すきな おやつを えらべる'
   },
 

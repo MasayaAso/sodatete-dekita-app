@@ -301,6 +301,12 @@
   .keypad button { background: var(--card); border-radius: 18px; font-size: 32px; font-weight: 900; padding: 14px 0; box-shadow: 0 5px 0 var(--line); }
   .keypad button:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--line); }
   .keypad .sub { background: #EFE5D6; } .keypad .go { background: var(--accent); color: #fff; font-size: 20px; }
+  .story { text-align: left; font-size: 21px; line-height: 1.75; margin: 10px 2px 6px; font-weight: 700; }
+  .story .se { float: right; font-size: 46px; line-height: 1; margin: 0 0 4px 8px; }
+  .expr.wp { font-size: 46px; margin-top: 6px; } .expr .unit { font-size: 26px; color: var(--sub); }
+  .speak { float: right; background: var(--soft); border-radius: 99px; padding: 2px 10px; font-size: 13px; }
+  .shiki { display: inline-block; background: var(--good-soft); color: var(--good); border-radius: 12px; padding: 2px 12px; font-size: 22px; font-weight: 900; }
+  .hintq { font-size: 15px; color: var(--sub); }
   .math-result { text-align: center; } .math-result .big-pet { font-size: 90px; }
   .math-result .q { font-size: 22px; font-weight: 900; margin: 8px 0; }
   .math-result .acts { display: flex; gap: 10px; }
@@ -859,28 +865,88 @@ function petStatusHtml() {
 }
 
 /* =====================================================================
- *  さんすう タブ：アプリの なかで もんだいを とく
+ *  さんすう タブ：まいにち ちがう「おはなしの もんだい（ぶんしょうだい）」
+ *  - その日の 日づけ ＋ コース ＋ なんかいめ で 乱数を きめるので、毎日 ちがう もんだいが でる
+ *  - こたえると「しき」（7 ＋ 5 ＝ 12）を みせて、文と しきを むすびつける
+ *  - 🔊 で もんだいを よみあげ（ブラウザの よみあげ きのう）
  * ===================================================================== */
-var MATH = null;
-function mathCfg() { return P().math || { count: 10, levels: [{ kind: 'add10', icon: '➕', name: 'たしざん', sub: '10まで' }] }; }
-function rnd(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
-function makeQ(kind) {
-  if (kind === 'mix') kind = pick(['add10', 'sub10', 'add20', 'sub20']);
-  var a, b;
-  if (kind === 'add10') { a = rnd(1, 9); b = rnd(1, 10 - a); return { a: a, b: b, op: '+', ans: a + b }; }
-  if (kind === 'sub10') { a = rnd(2, 10); b = rnd(1, a - 1); return { a: a, b: b, op: '−', ans: a - b }; }
-  if (kind === 'add20') { a = rnd(2, 9); b = rnd(11 - a, 9); return { a: a, b: b, op: '+', ans: a + b }; }
-  a = rnd(11, 18); b = rnd(a - 9, 9); if (b <= a - 10) b = a - 9; return { a: a, b: b, op: '−', ans: a - b };
+var MATH = null, MATH_RUNS = {};
+function mathCfg() { return P().math || { count: 5, levels: [{ kind: 'add', max: 10, icon: '➕', name: 'ふえると いくつ' }] }; }
+function seededRng(str) {
+  var h = 1779033703 ^ str.length;
+  for (var i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
+  return function () {
+    h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909);
+    var t = (h ^= h >>> 16) >>> 0; return t / 4294967296;
+  };
 }
-function startMath(i) {
-  var lv = mathCfg().levels[i], qs = [], key = {};
-  while (qs.length < (mathCfg().count || 10)) {
-    var q = makeQ(lv.kind), k = q.a + q.op + q.b;
-    if (key[k] && Object.keys(key).length < 30) continue;
-    key[k] = 1; qs.push(q);
+var R = Math.random;
+function rnd(a, b) { return a + Math.floor(R() * (b - a + 1)); }
+function rpick(a) { return a[Math.floor(R() * a.length)]; }
+
+// おはなしに でてくる もの（c = かぞえかた）
+var WP = {
+  who: ['しばまる', 'うさぎさん', 'たぬきくん', 'くまさん', 'ねこさん', 'りすさん'],
+  food: [{ n: 'りんご', e: '🍎', c: 'こ' }, { n: 'みかん', e: '🍊', c: 'こ' }, { n: 'どんぐり', e: '🌰', c: 'こ' }, { n: 'あめ', e: '🍬', c: 'こ' },
+         { n: 'クッキー', e: '🍪', c: 'まい' }, { n: 'いちご', e: '🍓', c: 'こ' }, { n: 'ほね', e: '🦴', c: 'ほん' }],
+  thing: [{ n: 'えんぴつ', e: '✏️', c: 'ほん' }, { n: 'シール', e: '⭐', c: 'まい' }, { n: 'おりがみ', e: '🟥', c: 'まい' }, { n: 'ビーだま', e: '🔵', c: 'こ' }, { n: 'ほん', e: '📕', c: 'さつ' }],
+  live: [{ n: 'すずめ', e: '🐦', c: 'わ', place: 'でんせん' }, { n: 'こども', e: '🧒', c: 'にん', place: 'こうえん' }, { n: 'さかな', e: '🐟', c: 'ひき', place: 'いけ' },
+         { n: 'ねこ', e: '🐱', c: 'ひき', place: 'にわ' }, { n: 'ありさん', e: '🐜', c: 'ひき', place: 'みち' }],
+  pair: [['あかい', 'しろい'], ['おおきい', 'ちいさい'], ['きいろい', 'あおい']]
+};
+
+/** すうじの くみあわせ（max 10 = 10まで / 20 = くりあがり・くりさがり） */
+function nums(op, max) {
+  var a, b;
+  if (op === '+') {
+    if (max <= 10) { a = rnd(2, 8); b = rnd(1, 10 - a); }
+    else { a = rnd(3, 9); b = rnd(11 - a, 9); }
+    return { a: a, b: b, ans: a + b };
   }
+  if (max <= 10) { a = rnd(4, 10); b = rnd(1, a - 1); }
+  else { a = rnd(11, 17); b = rnd(a - 9, 9); }
+  return { a: a, b: b, ans: a - b };
+}
+
+/** 1もん つくる：{ text, e(えもじ), unit, a, b, op, ans } */
+function makeQ(kind, max) {
+  if (kind === 'mix') kind = rpick(['add', 'add', 'sub', 'sub', 'cmp']);
+  var who = rpick(WP.who), t;
+  if (kind === 'add') {
+    var n = nums('+', max), k = rnd(0, 3);
+    if (k === 0) { t = rpick(WP.food); return q(who + 'は ' + t.n + 'を ' + n.a + t.c + ' もって います。\nおかあさんに ' + n.b + t.c + ' もらいました。\nぜんぶで ' + nan(t.c) + ' に なりましたか？', t, n, '+'); }
+    if (k === 1) { t = rpick(WP.live); return q(t.place + 'に ' + t.n + 'が ' + n.a + t.c + ' います。\nあとから ' + n.b + t.c + ' きました。\nみんなで ' + nan(t.c) + ' に なりましたか？', t, n, '+'); }
+    if (k === 2) { t = rpick(WP.thing); var pr = rpick(WP.pair); return q(pr[0] + ' ' + t.n + 'が ' + n.a + t.c + '、' + pr[1] + ' ' + t.n + 'が ' + n.b + t.c + ' あります。\nあわせて ' + nan(t.c) + ' ですか？', t, n, '+'); }
+    t = rpick(WP.thing); return q(who + 'は ' + t.n + 'を ' + n.a + t.c + ' もって います。\nきょう ' + n.b + t.c + ' かいました。\nぜんぶで ' + nan(t.c) + ' ですか？', t, n, '+');
+  }
+  if (kind === 'sub') {
+    var m = nums('-', max), j = rnd(0, 3);
+    if (j === 0) { t = rpick(WP.food); return q(t.n + 'が ' + m.a + t.c + ' あります。\n' + who + 'が ' + m.b + t.c + ' たべました。\nのこりは ' + nan(t.c) + ' ですか？', t, m, '−'); }
+    if (j === 1) { t = rpick(WP.live); return q(t.place + 'に ' + t.n + 'が ' + m.a + t.c + ' いました。\n' + m.b + t.c + ' かえりました。\nのこりは ' + nan(t.c) + ' ですか？', t, m, '−'); }
+    if (j === 2) { t = rpick(WP.thing); return q(who + 'は ' + t.n + 'を ' + m.a + t.c + ' もって います。\nともだちに ' + m.b + t.c + ' あげました。\nのこりは ' + nan(t.c) + ' ですか？', t, m, '−'); }
+    t = rpick(WP.food); return q('おさらに ' + t.n + 'が ' + m.a + t.c + ' あります。\n' + m.b + t.c + ' おとうとに わけました。\nおさらには ' + nan(t.c) + ' のこって いますか？', t, m, '−');
+  }
+  // cmp：ちがいは いくつ
+  var c = nums('-', max), pr2 = rpick(WP.pair), i = rnd(0, 1);
+  if (i === 0) { t = rpick(WP.thing); return q(pr2[0] + ' ' + t.n + 'が ' + c.a + t.c + '、' + pr2[1] + ' ' + t.n + 'が ' + c.b + t.c + ' あります。\n' + pr2[0] + ' ' + t.n + 'は ' + nan(t.c) + ' おおいですか？', t, c, '−'); }
+  t = rpick(WP.live); return q(t.place + 'に ' + pr2[0] + ' ' + t.n + 'が ' + c.a + t.c + '、' + pr2[1] + ' ' + t.n + 'が ' + c.b + t.c + ' います。\nちがいは ' + nan(t.c) + ' ですか？', t, c, '−');
+}
+/** なん＋かぞえかた（ほん→ぼん、ひき→びき） */
+function nan(c) { return 'なん' + ({ 'ほん': 'ぼん', 'ひき': 'びき' }[c] || c); }
+function q(text, t, n, op) { return { text: text, e: t.e, unit: t.c, a: n.a, b: n.b, op: op, ans: n.ans }; }
+
+function startMath(i) {
+  var lv = mathCfg().levels[i], qs = [], seen = {};
+  var key = DATA.today + '|' + i; MATH_RUNS[key] = (MATH_RUNS[key] || 0) + 1;
+  R = seededRng(key + '|' + MATH_RUNS[key]);
+  var guard = 0;
+  while (qs.length < (mathCfg().count || 5) && guard++ < 200) {
+    var one = makeQ(lv.kind, lv.max || 10), k = one.a + one.op + one.b;
+    if (seen[k]) continue; seen[k] = 1; qs.push(one);
+  }
+  R = Math.random;
   MATH = { lv: lv, qs: qs, i: 0, input: '', correct: 0, missed: false, done: false, lock: false };
-  render();
+  render(); speakQ();
 }
 function viewMath() {
   var cfg = mathCfg(), t = P().tasks.filter(function (x) { return x.math; })[0];
@@ -888,10 +954,10 @@ function viewMath() {
   var h = '<div class="day-head"><h2>🔢 さんすう</h2>' + (MATH ? '<button class="pill-btn" onclick="MATH=null;render()">やめる</button>' : '') + '</div>';
   if (!MATH) {
     h += '<div class="math-intro"><span class="mdog">' + dogFaceHtml() + '</span><div class="mbub">' +
-      (doneToday ? 'きょうの さんすう できたね！<br>もっと やっても いいよ 🎵' : 'どれに ちょうせん する？<br>' + (cfg.count || 10) + 'もん とけたら ⭐と 🦴！') + '</div></div>';
+      (doneToday ? 'きょうの さんすう できたね！<br>もっと やっても いいよ 🎵' : 'きょうの おはなし もんだい だよ！<br>' + (cfg.count || 5) + 'もん とけたら ⭐と 🦴！') + '</div></div>';
     h += '<div class="levels">' + cfg.levels.map(function (lv, i) {
       return '<button class="level" onclick="startMath(' + i + ')"><b>' + lv.icon + '</b><span>' + esc(lv.name) + '</span><small>' + esc(lv.sub || '') + '</small></button>';
-    }).join('') + '</div>';
+    }).join('') + '</div><div class="muted" style="text-align:center;margin-top:12px">もんだいは まいにち かわるよ</div>';
     return h;
   }
   if (MATH.done) {
@@ -899,18 +965,28 @@ function viewMath() {
     return h + '<div class="card math-result"><div class="big-pet">' + dogFaceHtml() + '</div>' +
       '<div class="q">' + n + 'もん中 ' + c + 'もん<br>いっかいで せいかい！</div>' +
       '<div class="rstars">' + '⭐'.repeat(Math.max(1, Math.round(c / n * 5))) + '</div>' +
-      '<div class="muted" style="margin:8px 0 14px">' + (c === n ? 'ぜんもん せいかい！ しばまるも びっくり！' : c >= n * 0.7 ? 'すごい！ その ちょうし！' : 'さいごまで がんばったね！') + '</div>' +
+      '<div class="muted" style="margin:8px 0 14px">' + (c === n ? 'ぜんもん せいかい！ しばまるも びっくり！' : c >= n * 0.6 ? 'すごい！ その ちょうし！' : 'さいごまで がんばったね！') + '</div>' +
       '<div class="acts"><button class="no" onclick="MATH=null;render()">ほかの もんだい</button><button class="yes" onclick="go(\'today\')">きょうに もどる</button></div></div>';
   }
-  var q = MATH.qs[MATH.i];
+  var qq = MATH.qs[MATH.i];
   h += '<div class="mprog">' + MATH.qs.map(function (_, i) { return '<i class="' + (i < MATH.i ? 'ok' : i === MATH.i ? 'now' : '') + '"></i>'; }).join('') + '</div>';
-  h += '<div class="card mq"><div class="mlv">' + MATH.lv.icon + ' ' + esc(MATH.lv.name) + '　' + (MATH.i + 1) + '/' + MATH.qs.length + '</div>' +
-    '<div class="expr">' + q.a + ' ' + q.op + ' ' + q.b + ' = <span class="ans" id="ans">' + (MATH.input || '？') + '</span></div>' +
+  h += '<div class="card mq"><div class="mlv">' + MATH.lv.icon + ' ' + esc(MATH.lv.name) + '　' + (MATH.i + 1) + '/' + MATH.qs.length +
+    '<button class="speak" onclick="speakQ()">🔊 よむ</button></div>' +
+    '<div class="story"><span class="se">' + qq.e + '</span>' + esc(qq.text).replace(/\n/g, '<br>') + '</div>' +
+    '<div class="expr wp"><span class="ans" id="ans">' + (MATH.input || '？') + '</span> <span class="unit">' + esc(qq.unit) + '</span></div>' +
     '<div class="mhint" id="mhint"></div>' +
-    '<div class="msmall"><span class="mdog sm" id="mdog">' + dogFaceHtml() + '</span><span class="mbub sm" id="mbub">がんばれ〜！</span></div></div>';
+    '<div class="msmall"><span class="mdog sm" id="mdog">' + dogFaceHtml() + '</span><span class="mbub sm" id="mbub">よく よんでね！</span></div></div>';
   h += '<div class="keypad">' + [7, 8, 9, 4, 5, 6, 1, 2, 3].map(function (k) { return '<button onclick="mkey(' + k + ')">' + k + '</button>'; }).join('') +
     '<button class="sub" onclick="mkey(\'del\')">⌫</button><button onclick="mkey(0)">0</button><button class="go" onclick="mkey(\'ok\')">こたえる</button></div>';
   return h;
+}
+function speakQ() {
+  try {
+    if (!SOUND || !MATH || MATH.done || !window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(MATH.qs[MATH.i].text.replace(/\n/g, '。'));
+    u.lang = 'ja-JP'; u.rate = 0.9; speechSynthesis.speak(u);
+  } catch (e) {}
 }
 function dogFaceHtml() { var st = dogStage(), it = wornItem(); return '<span class="dogmini">' + (st.emoji === '🐾' ? '🐶' : st.emoji) + (it ? '<span class="acc">' + it.emoji + '</span>' : '') + '</span>'; }
 function mkey(k) {
@@ -921,35 +997,38 @@ function mkey(k) {
   sound('step');
   var a = document.getElementById('ans'); if (a) a.textContent = MATH.input || '？';
 }
+function shiki(qq) { return qq.a + ' ' + qq.op + ' ' + qq.b + ' ＝ ' + qq.ans; }
 function mcheck() {
   if (!MATH.input) return;
-  var q = MATH.qs[MATH.i], ok = Number(MATH.input) === q.ans, a = document.getElementById('ans'), bub = document.getElementById('mbub'), dg = document.getElementById('mdog');
+  var qq = MATH.qs[MATH.i], ok = Number(MATH.input) === qq.ans, a = document.getElementById('ans'), bub = document.getElementById('mbub'), dg = document.getElementById('mdog');
   if (ok) {
     if (!MATH.missed) MATH.correct++;
     sound('done'); a.classList.add('right'); bub.textContent = pick(['せいかい！', 'すごい！', 'ワン！ ワン！', 'てんさい！']);
     dg.classList.remove('hop'); void dg.offsetWidth; dg.classList.add('hop'); confetti(6);
+    document.getElementById('mhint').innerHTML = '<span class="shiki">しき： ' + shiki(qq) + '</span>';
     MATH.lock = true;
-    setTimeout(nextQ, 800);
+    setTimeout(nextQ, 1700);
   } else if (!MATH.missed) {
     MATH.missed = true; MATH.input = ''; sound('pet');
     a.textContent = '？'; a.classList.add('shake'); setTimeout(function () { a.classList.remove('shake'); }, 500);
-    bub.textContent = 'おしい！ もう いちど';
+    bub.textContent = 'おしい！ もう いちど よんでみよう';
+    document.getElementById('mhint').innerHTML = '<span class="hintq">' + (qq.op === '+' ? 'ふえる おはなし？ へる おはなし？' : 'へる？ それとも くらべる？') + '</span>';
   } else {
-    // 2かいめも ちがったら、こたえと ヒントを みせて つぎへ（しからない）
-    MATH.lock = true; a.textContent = q.ans; a.classList.add('teach');
-    bub.textContent = 'こたえは ' + q.ans + ' だよ。つぎ いこう！';
-    document.getElementById('mhint').innerHTML = dotsHint(q);
-    setTimeout(nextQ, 2600);
+    // 2かいめも ちがったら、しき と ●の ずで こたえを みせて つぎへ（しからない）
+    MATH.lock = true; a.textContent = qq.ans; a.classList.add('teach');
+    bub.textContent = 'こたえは ' + qq.ans + qq.unit + ' だよ。つぎ いこう！';
+    document.getElementById('mhint').innerHTML = '<span class="shiki">しき： ' + shiki(qq) + '</span><br>' + dotsHint(qq);
+    setTimeout(nextQ, 3600);
   }
 }
-function dotsHint(q) {
-  if (q.op === '+') return '<span class="dots">' + '●'.repeat(q.a) + '</span> ＋ <span class="dots b">' + '●'.repeat(q.b) + '</span>';
-  return '<span class="dots">' + '●'.repeat(q.ans) + '<s>' + '●'.repeat(q.b) + '</s></span>';
+function dotsHint(qq) {
+  if (qq.op === '+') return '<span class="dots">' + '●'.repeat(qq.a) + '</span> ＋ <span class="dots b">' + '●'.repeat(qq.b) + '</span>';
+  return '<span class="dots">' + '●'.repeat(qq.ans) + '<s>' + '●'.repeat(qq.b) + '</s></span>';
 }
 function nextQ() {
   MATH.i++; MATH.input = ''; MATH.missed = false; MATH.lock = false;
   if (MATH.i >= MATH.qs.length) { MATH.done = true; finishMath(); }
-  render();
+  render(); speakQ();
 }
 function finishMath() {
   sound('level'); confetti(40);
