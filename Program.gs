@@ -8,7 +8,7 @@
  *  - タスクは 4つで 固定です。id は変えないでください（記録の集計に使います）。
  *      shukudai … がっこうの しゅくだい（ひとまとめで 1こ。まいにち。ない ひも「やった」で OK）
  *      razkids  … ラズキッズ（えいご）
- *      dokusho  … どくしょ ノート
+ *      dokusho  … どくは ノート（id は そのまま dokusho）
  *      sansu    … さんすう（math: true … アプリの「さんすう」タブで もんだいを とくと できた！になる）
  *  - days: 0=にち 1=げつ 2=か 3=すい 4=もく 5=きん 6=ど（省略すると毎日）
  *  - 素の JavaScript（var で宣言・関数呼び出しなし）で書いてください。
@@ -29,7 +29,7 @@ var PROGRAM = {
   tasks: [
     { id: 'shukudai', label: 'しゅくだい',      icon: '🎒', stars: 1,                         hint: 'ない ひは「やった」で OK！' },
     { id: 'razkids',  label: 'ラズキッズ',      icon: '🔤', stars: 1,                         hint: 'えいごの ほんを よもう' },
-    { id: 'dokusho',  label: 'どくしょ ノート', icon: '📒', stars: 1,                         hint: 'よんだ ほんを かこう' },
+    { id: 'dokusho',  label: 'どくは ノート',   icon: '📒', stars: 1,                         hint: 'よんだ ほんを かこう' },
     { id: 'sansu',    label: 'さんすう',        icon: '🔢', stars: 1, math: true,             hint: 'もんだいに ちょうせん！' }
   ],
 
