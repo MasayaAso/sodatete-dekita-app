@@ -331,6 +331,10 @@
   .mm-day { border-bottom: 1px solid var(--line); padding: 4px 0; font-size: 14px; }
   .mm-day summary { cursor: pointer; }
   .mm-day ol { margin: 6px 0 6px 18px; padding: 0; } .mm-day li { margin-bottom: 6px; }
+  .clockwrap { text-align: center; margin: 4px 0; }
+  .clock { width: min(210px, 56vw); height: auto; }
+  .clockfig .clock { width: min(230px, 62vw); }
+  .expr .ans.active { box-shadow: 0 0 0 3px var(--accent); }
   .math-result { text-align: center; } .math-result .big-pet { font-size: 90px; }
   .math-result .q { font-size: 22px; font-weight: 900; margin: 8px 0; }
   .math-result .acts { display: flex; gap: 10px; }
@@ -386,7 +390,7 @@
  *  google.script.run が無い環境（ローカルでファイルを開いたとき）は
  *  「おためしモード」になり、ブラウザ内にデータを保存して動きます。
  * ===================================================================== */
-var APP_BUILD = '20261108072724';   // 公開時に npm run publish:web が日時に書きかえる
+var APP_BUILD = '20261108074134';   // 公開時に npm run publish:web が日時に書きかえる
 var IS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
 var DATA = null, VIEW = 'today', SELECTED = null, ADULT_OK = false, ADULT_WEEK = null, MONTH = null;
 var audioCtx = null;
@@ -946,6 +950,8 @@ var COMPARE = [
 
 /** 1もん つくる：{ type, text, unit, ans, shiki, fig } */
 function makeWQ(type) {
+  if (type === 'drill') type = rpick(['total', 'ends', 'give']);   // ドリルと おなじ かたち
+  if (type === 'clock') return makeClock();
   var L = rpick(LINES), c = L.c, a, b, n;
   if (type === 'total') {
     a = rnd(3, 9); b = rnd(3, 9); n = a + b;
@@ -1008,6 +1014,34 @@ function makeWQ(type) {
   return W('less', cp.x + 'は ' + a + cp.c + ' ' + cp.v + '。\n' + cp.y + 'は ' + cp.x + 'より ' + b + cp.c + ' すくない そうです。\n' + cp.y + 'は ' + nan(cp.c) + ' ですか？',
     cp.c, a - b, a + ' − ' + b + ' ＝ ' + (a - b), bars(cp.x, cp.ex, a, cp.y, cp.ey, a - b, b, 'すくない'), 'すくない ほうは ひきざん かな？');
 }
+/** とけい：ちょうど／はん／5ふん きざみ（ながい はり・みじかい はり） */
+function makeClock() {
+  var h = rnd(1, 12), r = R(), m = r < 0.3 ? 0 : r < 0.55 ? 30 : rnd(1, 11) * 5;
+  var q = W('clock', m === 0 ? 'とけいを よもう。\nいま なんじ ですか？' : 'とけいを よもう。\nいま なんじ なんぷん ですか？',
+    'じ', h, m === 0 ? 'こたえ： ' + h + 'じ' : 'こたえ： ' + h + 'じ ' + m + 'ふん' + (m === 30 ? '（' + h + 'じはん）' : ''),
+    { t: 'clock', h: h, m: m, labels: true },
+    m === 0 ? 'みじかい はりが 「じ」、ながい はりが 12なら ちょうど だよ' : 'ながい はりは 1めもりで 5ふん。1→5ふん、2→10ふん…');
+  if (m) { q.ans2 = m; q.unit2 = 'ふん'; }
+  return q;
+}
+function clockSvg(h, m, labels) {
+  var s = '<svg class="clock" viewBox="0 0 200 200" aria-label="とけい">' +
+    '<circle cx="100" cy="100" r="92" fill="#fff" stroke="#E8873A" stroke-width="6"/>';
+  for (var i = 0; i < 60; i++) {
+    var a = i * 6 * Math.PI / 180, r1 = i % 5 ? 84 : 78;
+    s += '<line x1="' + (100 + Math.sin(a) * r1) + '" y1="' + (100 - Math.cos(a) * r1) + '" x2="' + (100 + Math.sin(a) * 88) + '" y2="' + (100 - Math.cos(a) * 88) + '" stroke="#8A7A6E" stroke-width="' + (i % 5 ? 1 : 2.5) + '"/>';
+  }
+  for (var k = 1; k <= 12; k++) {
+    var b = k * 30 * Math.PI / 180;
+    s += '<text x="' + (100 + Math.sin(b) * 64) + '" y="' + (100 - Math.cos(b) * 64 + 7) + '" text-anchor="middle" font-size="20" font-weight="900" fill="#3B2F2F">' + k + '</text>';
+    if (labels) s += '<text x="' + (100 + Math.sin(b) * 101) + '" y="' + (100 - Math.cos(b) * 101 + 4) + '" text-anchor="middle" font-size="10" fill="#4FB0F0">' + (k * 5 % 60 || 0) + '</text>';
+  }
+  var ha = ((h % 12) + m / 60) * 30 * Math.PI / 180, ma = m * 6 * Math.PI / 180;
+  s += '<line x1="100" y1="100" x2="' + (100 + Math.sin(ha) * 44) + '" y2="' + (100 - Math.cos(ha) * 44) + '" stroke="#3B2F2F" stroke-width="8" stroke-linecap="round"/>';
+  s += '<line x1="100" y1="100" x2="' + (100 + Math.sin(ma) * 72) + '" y2="' + (100 - Math.cos(ma) * 72) + '" stroke="#FF7EA8" stroke-width="5" stroke-linecap="round"/>';
+  s += '<circle cx="100" cy="100" r="6" fill="#3B2F2F"/></svg>';
+  return s;
+}
 function W(type, text, unit, ans, shiki, fig, tip) { return { type: type, text: text, unit: unit, ans: ans, shiki: shiki, fig: fig, tip: tip || 'ずを みて かぞえて みよう' }; }
 function line(L, n, marks, left, right, braces) { return { t: 'line', n: n, e: L.e, marks: marks, me: [L.we, L.we2], left: left, right: right, braces: braces }; }
 function pair(an, ae, a, bn, be, b, rest) { return { t: 'pair', an: an, ae: ae, a: a, bn: bn, be: be, b: b, rest: rest }; }
@@ -1015,6 +1049,7 @@ function bars(xn, xe, a, yn, ye, bN, diff, word) { return { t: 'bars', xn: xn, x
 
 /** ず（えもじで かく） */
 function figHtml(f) {
+  if (f.t === 'clock') return '<div class="fig clockfig">' + clockSvg(f.h, f.m, true) + '<div class="fnote">🩷 ながい はり ＝ ふん（そとの あおい かず）　⚫ みじかい はり ＝ じ</div></div>';
   if (f.t === 'line') {
     var cols = 'grid-template-columns:repeat(' + f.n + ',1fr)', up = '', dn = '', items = '';
     f.braces.forEach(function (b) {
@@ -1051,23 +1086,25 @@ function figHtml(f) {
 
 /** その日の もんだい（日づけで きまる） */
 function dayProblems(d) {
-  var pl = planFor(d), cnt = mathCfg().count || 4, out = [], seen = {};
+  var pl = planFor(d), ex = mathCfg().extras || [], cnt = Math.max(1, (mathCfg().count || 5) - ex.length), out = [], seen = {};
   R = seededRng('wp|' + d);
   for (var i = 0, g = 0; out.length < cnt && g < 80; g++) {
     var qq = makeWQ(pl.types[i % pl.types.length]);
-    if (seen[qq.text]) continue; seen[qq.text] = 1; out.push(qq); i++;
+    if (seen[qq.text + qq.ans]) continue; seen[qq.text + qq.ans] = 1; out.push(qq); i++;
   }
+  ex.forEach(function (t) { out.push(makeWQ(t)); });   // まいにち：ドリルと おなじ かたち ＋ とけい
   R = Math.random;
   return { plan: pl, qs: out };
 }
+function practiceList() { return (mathCfg().plan || []).concat(mathCfg().practice || []); }
 function practiceProblems(pi) {
-  var pl = mathCfg().plan[pi], out = [];
+  var pl = practiceList()[pi], out = [];
   for (var i = 0; i < (mathCfg().count || 4); i++) out.push(makeWQ(pl.types[Math.floor(Math.random() * pl.types.length)]));
   return { plan: pl, qs: out };
 }
 function startMath(pi) {
   var set = pi === 'today' ? dayProblems(DATA.today) : practiceProblems(pi);
-  MATH = { title: set.plan.title, icon: set.plan.icon, today: pi === 'today', qs: set.qs, i: 0, input: '', correct: 0, missed: false, done: false, lock: false, fig: false };
+  MATH = { title: set.plan.title, icon: set.plan.icon, today: pi === 'today', qs: set.qs, i: 0, input: '', input2: '', field: 0, correct: 0, missed: false, done: false, lock: false, fig: false };
   render(); speakQ();
 }
 function viewMath() {
@@ -1077,7 +1114,7 @@ function viewMath() {
     h += '<div class="math-intro"><span class="mdog">' + dogFaceHtml() + '</span><div class="mbub">' +
       (doneToday ? 'きょうの もんだい できたね！<br>れんしゅうも できるよ 🎵' : 'ずに かいて かんがえよう！<br>' + (mathCfg().count || 4) + 'もん とけたら ⭐と 🦴！') + '</div></div>';
     h += '<button class="level today-set" onclick="startMath(\'today\')"><b>' + pl.icon + '</b><span>きょうの もんだい</span><small>' + esc(pl.title) + (doneToday ? ' ✅' : '') + '</small></button>';
-    h += '<h3 class="subh">れんしゅう（いつでも ちがう もんだい）</h3><div class="levels">' + mathCfg().plan.map(function (p, i) {
+    h += '<h3 class="subh">れんしゅう（いつでも ちがう もんだい）</h3><div class="levels">' + practiceList().map(function (p, i) {
       return '<button class="level" onclick="startMath(' + i + ')"><b>' + p.icon + '</b><span>' + esc(p.title) + '</span></button>';
     }).join('') + '</div>';
     return h;
@@ -1095,8 +1132,10 @@ function viewMath() {
   h += '<div class="card mq"><div class="mlv">' + MATH.icon + ' ' + esc(MATH.title) + '　' + (MATH.i + 1) + '/' + MATH.qs.length +
     '<button class="speak" onclick="speakQ()">🔊 よむ</button></div>' +
     '<div class="story">' + esc(qq.text).replace(/\n/g, '<br>') + '</div>' +
-    '<div id="figbox">' + (MATH.fig ? figHtml(qq.fig) : '<button class="figbtn" onclick="showFig()">🔍 ずで かんがえる</button>') + '</div>' +
-    '<div class="expr wp"><span class="ans" id="ans">' + (MATH.input || '？') + '</span> <span class="unit">' + esc(qq.unit) + '</span></div>' +
+    (qq.type === 'clock' ? '<div class="clockwrap">' + clockSvg(qq.fig.h, qq.fig.m, false) + '</div>' : '') +
+    '<div id="figbox">' + (MATH.fig ? figHtml(qq.fig) : '<button class="figbtn" onclick="showFig()">' + (qq.type === 'clock' ? '🔍 よみかたの ヒント' : '🔍 ずで かんがえる') + '</button>') + '</div>' +
+    '<div class="expr wp"><span class="ans' + (qq.ans2 != null && MATH.field === 0 ? ' active' : '') + '" id="ans" onclick="mfield(0)">' + (MATH.input || '？') + '</span> <span class="unit">' + esc(qq.unit) + '</span>' +
+    (qq.ans2 != null ? ' <span class="ans' + (MATH.field === 1 ? ' active' : '') + '" id="ans2" onclick="mfield(1)">' + (MATH.input2 || '？') + '</span> <span class="unit">' + esc(qq.unit2) + '</span>' : '') + '</div>' +
     '<div class="mhint" id="mhint"></div>' +
     '<div class="msmall"><span class="mdog sm" id="mdog">' + dogFaceHtml() + '</span><span class="mbub sm" id="mbub">もんだいを きちんと よもう！</span></div></div>';
   h += '<div class="keypad">' + [7, 8, 9, 4, 5, 6, 1, 2, 3].map(function (k) { return '<button onclick="mkey(' + k + ')">' + k + '</button>'; }).join('') +
@@ -1113,39 +1152,56 @@ function speakQ() {
   } catch (e) {}
 }
 function dogFaceHtml() { var st = dogStage(), it = wornItem(); return '<span class="dogmini">' + (st.emoji === '🐾' ? '🐶' : st.emoji) + (it ? '<span class="acc">' + it.emoji + '</span>' : '') + '</span>'; }
+function mfield(f) {
+  if (!MATH || MATH.lock || MATH.qs[MATH.i].ans2 == null) return;
+  MATH.field = f;
+  var a = document.getElementById('ans'), b = document.getElementById('ans2');
+  if (a) a.classList.toggle('active', f === 0); if (b) b.classList.toggle('active', f === 1);
+}
 function mkey(k) {
   if (!MATH || MATH.lock) return;
-  if (k === 'del') MATH.input = MATH.input.slice(0, -1);
+  var two = MATH.qs[MATH.i].ans2 != null, key = two && MATH.field === 1 ? 'input2' : 'input';
+  if (k === 'del') { if (!MATH[key] && key === 'input2') { mfield(0); key = 'input'; } MATH[key] = MATH[key].slice(0, -1); }
   else if (k === 'ok') return mcheck();
-  else if (MATH.input.length < 2) MATH.input += String(k);
+  else if (MATH[key].length < 2) {
+    MATH[key] += String(k);
+    // 「じ」が きまったら つぎは「ふん」へ（2〜9 や 2けたなら じどうで うつる）
+    if (two && key === 'input' && (MATH.input.length === 2 || Number(MATH.input) >= 2)) mfield(1);
+  }
   sound('step');
   var a = document.getElementById('ans'); if (a) a.textContent = MATH.input || '？';
+  var b = document.getElementById('ans2'); if (b) b.textContent = MATH.input2 || '？';
 }
 function mcheck() {
-  if (!MATH.input) return;
-  var qq = MATH.qs[MATH.i], ok = Number(MATH.input) === qq.ans, a = document.getElementById('ans'), bub = document.getElementById('mbub'), dg = document.getElementById('mdog'), hint = document.getElementById('mhint');
+  var qq0 = MATH.qs[MATH.i];
+  if (!MATH.input || (qq0.ans2 != null && !MATH.input2)) { if (qq0.ans2 != null && MATH.input) mfield(1); return; }
+  var qq = qq0, ok = Number(MATH.input) === qq.ans && (qq.ans2 == null || Number(MATH.input2) === qq.ans2), a = document.getElementById('ans'), bub = document.getElementById('mbub'), dg = document.getElementById('mdog'), hint = document.getElementById('mhint');
   if (ok) {
     if (!MATH.missed) MATH.correct++;
     sound('done'); a.classList.add('right'); bub.textContent = pick(['せいかい！', 'すごい！', 'ワン！ ワン！', 'てんさい！']);
     dg.classList.remove('hop'); void dg.offsetWidth; dg.classList.add('hop'); confetti(6);
-    hint.innerHTML = '<span class="shiki">しき： ' + qq.shiki + '</span>';
+    hint.innerHTML = '<span class="shiki">' + (qq.type === 'clock' ? '' : 'しき： ') + qq.shiki + '</span>';
+    var b4 = document.getElementById('ans2'); if (b4) b4.classList.add('right');
     MATH.lock = true; setTimeout(nextQ, 2200);
   } else if (!MATH.missed) {
-    MATH.missed = true; MATH.input = ''; sound('pet');
+    MATH.missed = true; MATH.input = ''; MATH.input2 = ''; mfield(0); sound('pet');
+    var b2 = document.getElementById('ans2'); if (b2) b2.textContent = '？';
     a.textContent = '？'; a.classList.add('shake'); setTimeout(function () { a.classList.remove('shake'); }, 500);
     bub.textContent = 'おしい！ ずを みて みよう';
     showFig(); hint.innerHTML = '<span class="hintq">💡 ' + esc(qq.tip) + '</span>';
   } else {
     MATH.lock = true; a.textContent = qq.ans; a.classList.add('teach');
-    bub.textContent = 'こたえは ' + qq.ans + qq.unit + '。ずと しきを みてね';
-    showFig(); hint.innerHTML = '<span class="shiki">しき： ' + qq.shiki + '</span>';
+    var b3 = document.getElementById('ans2'); if (b3) { b3.textContent = qq.ans2; b3.classList.add('teach'); }
+    bub.textContent = 'こたえは ' + ansText(qq) + '。' + (qq.type === 'clock' ? 'はりを よく みてね' : 'ずと しきを みてね');
+    showFig(); hint.innerHTML = '<span class="shiki">' + (qq.type === 'clock' ? '' : 'しき： ') + qq.shiki + '</span>';
     var go2 = document.createElement('button'); go2.className = 'figbtn'; go2.textContent = 'わかった！ つぎへ ▶';
     go2.onclick = nextQ; hint.appendChild(document.createElement('br')); hint.appendChild(go2);
   }
 }
+function ansText(qq) { return qq.ans + qq.unit + (qq.ans2 != null ? ' ' + qq.ans2 + qq.unit2 : ''); }
 function nextQ() {
   if (!MATH) return;
-  MATH.i++; MATH.input = ''; MATH.missed = false; MATH.lock = false; MATH.fig = false;
+  MATH.i++; MATH.input = ''; MATH.input2 = ''; MATH.field = 0; MATH.missed = false; MATH.lock = false; MATH.fig = false;
   if (MATH.i >= MATH.qs.length) { MATH.done = true; finishMath(); }
   render(); speakQ();
 }
@@ -1165,7 +1221,7 @@ function monthMathHtml() {
     var d = mon + '-' + String(i).padStart(2, '0'), set = dayProblems(d);
     if (set.plan.title !== cur) { cur = set.plan.title; rows += '<div class="mm-head">' + set.plan.icon + ' ' + set.plan.from + '〜' + set.plan.to + 'にち：' + esc(cur) + '</div>'; }
     rows += '<details class="mm-day"' + (d === DATA.today ? ' open' : '') + '><summary>' + md(d) + '（' + DOW[dow(d)] + '）' + (d === DATA.today ? ' ← きょう' : '') + '</summary><ol>' +
-      set.qs.map(function (qq) { return '<li>' + esc(qq.text).replace(/\n/g, ' ') + '<br><b>こたえ ' + qq.ans + qq.unit + '</b>（しき ' + qq.shiki + '）</li>'; }).join('') + '</ol></details>';
+      set.qs.map(function (qq) { return '<li>' + esc(qq.text).replace(/\n/g, ' ') + (qq.type === 'clock' ? '（とけい ' + qq.fig.h + ':' + String(qq.fig.m).padStart(2, '0') + '）' : '') + '<br><b>こたえ ' + ansText(qq) + '</b>' + (qq.type === 'clock' ? '' : '（しき ' + qq.shiki + '）') + '</li>'; }).join('') + '</ol></details>';
   }
   return '<div class="card"><h3>🔢 今月のさんすう（1か月分の文章問題）</h3><div class="muted">日付ごとに決まった問題が出ます（子どもの画面と同じ）。テーマは Program.gs の math.plan で変えられます。</div>' + rows + '</div>';
 }
