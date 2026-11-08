@@ -335,6 +335,12 @@
   .clock { width: min(210px, 56vw); height: auto; }
   .clockfig .clock { width: min(230px, 62vw); }
   .expr .ans.active { box-shadow: 0 0 0 3px var(--accent); }
+  .clockpick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 6px 0; }
+  .clockpick > div { background: #FBF7EE; border-radius: 14px; padding: 4px; text-align: center; }
+  .clockpick b { display: block; font-size: 18px; color: var(--accent); }
+  .clockpick .clock { width: 100%; }
+  .reflect.due { outline: 3px solid var(--pink); }
+  .reflect textarea { min-height: 84px; }
   .math-result { text-align: center; } .math-result .big-pet { font-size: 90px; }
   .math-result .q { font-size: 22px; font-weight: 900; margin: 8px 0; }
   .math-result .acts { display: flex; gap: 10px; }
@@ -390,7 +396,7 @@
  *  google.script.run が無い環境（ローカルでファイルを開いたとき）は
  *  「おためしモード」になり、ブラウザ内にデータを保存して動きます。
  * ===================================================================== */
-var APP_BUILD = '20261108074134';   // 公開時に npm run publish:web が日時に書きかえる
+var APP_BUILD = '20261108074632';   // 公開時に npm run publish:web が日時に書きかえる
 var IS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
 var DATA = null, VIEW = 'today', SELECTED = null, ADULT_OK = false, ADULT_WEEK = null, MONTH = null;
 var audioCtx = null;
@@ -469,7 +475,7 @@ function moodOn(s) { var m = DATA.moods.filter(function (x) { return x.date === 
 function moodDef(id) { return P().moods.filter(function (m) { return m.id === id; })[0]; }
 function unreadCount() {
   var last = LS.get('hw-read', '');
-  return DATA.comments.filter(function (c) { return c.ts > last; }).length;
+  return letters().filter(function (c) { return c.ts > last; }).length;
 }
 
 /* ---------- しばまる（ほね・きせかえ・さんぽ） ---------- */
@@ -505,7 +511,7 @@ function render() {
   document.getElementById('app').innerHTML = html;
   attachYard();
   renderTabs();
-  if (VIEW === 'week') LS.set('hw-read', DATA.comments.reduce(function (a, c) { return c.ts > a ? c.ts : a; }, LS.get('hw-read', '')));
+  if (VIEW === 'week') LS.set('hw-read', letters().reduce(function (a, c) { return c.ts > a ? c.ts : a; }, LS.get('hw-read', '')));
 }
 
 function renderTabs() {
@@ -520,6 +526,7 @@ function renderTabs() {
   ];
   tabs.innerHTML = items.map(function (it) {
     return '<button class="' + (VIEW === it[0] ? 'on' : '') + '" onclick="go(\'' + it[0] + '\')"><b>' + it[1] + '</b>' + it[2] +
+      (it[0] === 'adult' && reflectionDue() ? '<span class="dot"></span>' : '') +
       (it[0] === 'week' && un ? '<span class="dot"></span>' : '') + '</button>';
   }).join('');
 }
@@ -640,7 +647,7 @@ function monthTable() {
 
 function lettersHtml() {
   var last = LS.get('hw-read', '');
-  var cs = DATA.comments.slice().sort(function (a, b) { return a.ts < b.ts ? 1 : -1; });
+  var cs = letters().slice().sort(function (a, b) { return a.ts < b.ts ? 1 : -1; });
   var h = '<div class="card"><h3>💌 ママ・パパからの おてがみ</h3>';
   if (!cs.length) return h + '<div class="muted">まだ おてがみは ないよ。がんばると とどくかも…？</div></div>';
   return h + cs.slice(0, 6).map(function (c) {
@@ -1014,18 +1021,66 @@ function makeWQ(type) {
   return W('less', cp.x + 'は ' + a + cp.c + ' ' + cp.v + '。\n' + cp.y + 'は ' + cp.x + 'より ' + b + cp.c + ' すくない そうです。\n' + cp.y + 'は ' + nan(cp.c) + ' ですか？',
     cp.c, a - b, a + ' − ' + b + ' ＝ ' + (a - b), bars(cp.x, cp.ex, a, cp.y, cp.ey, a - b, b, 'すくない'), 'すくない ほうは ひきざん かな？');
 }
-/** とけい：ちょうど／はん／5ふん きざみ（ながい はり・みじかい はり） */
+/* ---------- とけい：よむ だけでなく あたまを つかう もんだい ---------- */
+function jikoku(h, m) { return h + 'じ' + (m === 0 ? '' : m === 30 ? 'はん' : ' ' + m + 'ふん'); }
+var EVENTS = [
+  { n: 'アニメ', v: 'はじまります', h: [4, 6] }, { n: 'おやつ', v: 'です', h: [3, 3] }, { n: 'ピアノ', v: 'はじまります', h: [4, 5] },
+  { n: 'ゆうごはん', v: 'です', h: [6, 7] }, { n: 'こうえんで あそぶ やくそく', v: 'です', h: [2, 4] }, { n: 'おふろ', v: 'です', h: [7, 8] }
+];
+var DOINGS = ['さんぽに でかけました', 'こうえんで あそびはじめました', 'ほんを よみはじめました', 'しゅくだいを はじめました'];
+/** clock 系の しゅるいを ランダムに えらぶ */
 function makeClock() {
-  var h = rnd(1, 12), r = R(), m = r < 0.3 ? 0 : r < 0.55 ? 30 : rnd(1, 11) * 5;
-  var q = W('clock', m === 0 ? 'とけいを よもう。\nいま なんじ ですか？' : 'とけいを よもう。\nいま なんじ なんぷん ですか？',
-    'じ', h, m === 0 ? 'こたえ： ' + h + 'じ' : 'こたえ： ' + h + 'じ ' + m + 'ふん' + (m === 30 ? '（' + h + 'じはん）' : ''),
-    { t: 'clock', h: h, m: m, labels: true },
-    m === 0 ? 'みじかい はりが 「じ」、ながい はりが 12なら ちょうど だよ' : 'ながい はりは 1めもりで 5ふん。1→5ふん、2→10ふん…');
-  if (m) { q.ans2 = m; q.unit2 = 'ふん'; }
-  return q;
+  return makeClockOf(rpick(['read', 'after', 'after', 'before', 'until', 'until', 'pick', 'pick']));
 }
-function clockSvg(h, m, labels) {
-  var s = '<svg class="clock" viewBox="0 0 200 200" aria-label="とけい">' +
+function makeClockOf(k) {
+  var q0 = makeClockOf2(k); q0.sub = k; return q0;
+}
+function makeClockOf2(k) {
+  var h, m, q;
+  if (k === 'read') {
+    h = rnd(1, 12); m = rpick([0, 30, rnd(1, 11) * 5, rnd(1, 11) * 5]);
+    q = W('clock', 'とけいを よもう。\nいま ' + (m ? 'なんじ なんぷん' : 'なんじ') + ' ですか？', 'じ', h, 'こたえ： ' + jikoku(h, m),
+      { t: 'clock', h: h, m: m }, 'みじかい はりが「じ」、ながい はりが「ふん」。ながい はりは 1めもりで 5ふん');
+    if (m) { q.ans2 = m; q.unit2 = 'ふん'; }
+    q.view = { h: h, m: m }; return q;
+  }
+  if (k === 'after' || k === 'before') {
+    h = rnd(2, 10); m = rpick([0, 30]);
+    var step = rpick([30, 60, 60]), sign = k === 'after' ? 1 : -1, tot = h * 60 + m + sign * step, h2 = Math.floor(tot / 60), m2 = tot % 60;
+    var dur = step === 60 ? '1じかん' : '30ぷん';
+    var text = k === 'after'
+      ? 'しばまるは この とけいの じこくに ' + rpick(DOINGS) + '。\n' + dur + ' たつと なんじ' + (m2 ? ' なんぷん' : '') + ' ですか？'
+      : 'いまは この とけいの じこく です。\n' + dur + ' まえは なんじ' + (m2 ? ' なんぷん' : '') + ' でしたか？';
+    q = W('clock', text, 'じ', h2, 'こたえ： ' + jikoku(h, m) + ' の ' + dur + (k === 'after' ? ' あと' : ' まえ') + ' は ' + jikoku(h2, m2),
+      { t: 'clock', h: h, m: m, note: step === 60 ? 'みじかい はりが 1つ ' + (k === 'after' ? 'すすむ' : 'もどる') + ' と 1じかん' : 'ながい はりが はんぶん まわると 30ぷん' },
+      step === 60 ? '1じかん で みじかい はりは つぎの かずへ' : '30ぷん は ながい はりが はんぶん まわる');
+    if (m2) { q.ans2 = m2; q.unit2 = 'ふん'; }
+    q.view = { h: h, m: m }; return q;
+  }
+  if (k === 'until') {
+    var ev = rpick(EVENTS), tH = rnd(ev.h[0], ev.h[1]), tM = rpick([0, 30]), d = rnd(1, 6) * 5, now = tH * 60 + tM - d, nh = Math.floor(now / 60), nm = now % 60;
+    q = W('clock', ev.n + 'は ' + jikoku(tH, tM) + (ev.v === 'です' ? ' です' : 'に ' + ev.v) + '。\nいまは この とけいの じこく です。\nあと なんぷんで ' + jikoku(tH, tM) + ' に なりますか？',
+      'ふん', d, 'こたえ： ' + jikoku(nh, nm) + ' から ' + jikoku(tH, tM) + ' まで ' + d + 'ふん',
+      { t: 'clock', h: nh, m: nm, note: 'ながい はりが ' + (tM === 0 ? '12' : '6') + ' まで いくつ すすむ？ 1めもり ＝ 5ふん' },
+      'ながい はりを ' + (tM === 0 ? '12' : '6') + ' まで 5、10、15…と かぞえよう');
+    q.view = { h: nh, m: nm }; return q;
+  }
+  // pick：ただしい とけいを えらぶ（はりの まちがえやすい ところを ひっかけに）
+  h = rnd(1, 11); m = rpick([0, 30, 30]);
+  var right = { h: h, m: m }, wrongs = m === 30
+    ? [{ h: h + 1, m: 30 }, { h: h, m: 0 }, { h: h + 1, m: 0 }]
+    : [{ swap: true, h: h, m: 0 }, { h: h + 1, m: 0 }, { h: h, m: 30 }];
+  var opts = [right, wrongs[0], wrongs[R() < 0.5 ? 1 : 2]];
+  for (var i = opts.length - 1; i > 0; i--) { var j = Math.floor(R() * (i + 1)), t = opts[i]; opts[i] = opts[j]; opts[j] = t; }
+  var ai = opts.indexOf(right) + 1;
+  q = W('clock', jikoku(h, m) + ' の とけいは どれ ですか？\nばんごうで こたえよう。', 'ばん', ai, 'こたえ： ' + ai + 'ばん（' + jikoku(h, m) + '）',
+    { t: 'clock', h: h, m: m, note: m === 30 ? 'はん の ときは、みじかい はりが ' + h + ' と ' + (h + 1) + ' の あいだ' : 'ちょうど の ときは、ながい はりが 12' },
+    m === 30 ? 'みじかい はりの いちを よく みて！' : 'ながい はり と みじかい はり、どっちが どっち？');
+  q.view = { pick: opts }; return q;
+}
+/** とけいの え（swap: ながい はりと みじかい はりを いれかえた ひっかけ） */
+function clockSvg(h, m, labels, swap) {
+  var s = '<svg class="clock" viewBox="-14 -14 228 228" aria-label="とけい">' +
     '<circle cx="100" cy="100" r="92" fill="#fff" stroke="#E8873A" stroke-width="6"/>';
   for (var i = 0; i < 60; i++) {
     var a = i * 6 * Math.PI / 180, r1 = i % 5 ? 84 : 78;
@@ -1034,13 +1089,22 @@ function clockSvg(h, m, labels) {
   for (var k = 1; k <= 12; k++) {
     var b = k * 30 * Math.PI / 180;
     s += '<text x="' + (100 + Math.sin(b) * 64) + '" y="' + (100 - Math.cos(b) * 64 + 7) + '" text-anchor="middle" font-size="20" font-weight="900" fill="#3B2F2F">' + k + '</text>';
-    if (labels) s += '<text x="' + (100 + Math.sin(b) * 101) + '" y="' + (100 - Math.cos(b) * 101 + 4) + '" text-anchor="middle" font-size="10" fill="#4FB0F0">' + (k * 5 % 60 || 0) + '</text>';
+    if (labels) s += '<text x="' + (100 + Math.sin(b) * 104) + '" y="' + (100 - Math.cos(b) * 104 + 4) + '" text-anchor="middle" font-size="11" font-weight="700" fill="#4FB0F0">' + (k * 5 % 60) + '</text>';
   }
   var ha = ((h % 12) + m / 60) * 30 * Math.PI / 180, ma = m * 6 * Math.PI / 180;
+  if (swap) { var hh = ha; ha = ma; ma = hh; }
   s += '<line x1="100" y1="100" x2="' + (100 + Math.sin(ha) * 44) + '" y2="' + (100 - Math.cos(ha) * 44) + '" stroke="#3B2F2F" stroke-width="8" stroke-linecap="round"/>';
   s += '<line x1="100" y1="100" x2="' + (100 + Math.sin(ma) * 72) + '" y2="' + (100 - Math.cos(ma) * 72) + '" stroke="#FF7EA8" stroke-width="5" stroke-linecap="round"/>';
   s += '<circle cx="100" cy="100" r="6" fill="#3B2F2F"/></svg>';
   return s;
+}
+/** もんだいの とけい（1こ、または えらぶ 3こ） */
+function clockView(qq) {
+  var v = qq.view; if (!v) return '';
+  if (v.pick) return '<div class="clockpick">' + v.pick.map(function (o, i) {
+    return '<div><b>' + (i + 1) + '</b>' + (o.swap ? clockSvg(o.h, o.m, false, true) : clockSvg(o.h, o.m, false)) + '</div>';
+  }).join('') + '</div>';
+  return '<div class="clockwrap">' + clockSvg(v.h, v.m, false) + '</div>';
 }
 function W(type, text, unit, ans, shiki, fig, tip) { return { type: type, text: text, unit: unit, ans: ans, shiki: shiki, fig: fig, tip: tip || 'ずを みて かぞえて みよう' }; }
 function line(L, n, marks, left, right, braces) { return { t: 'line', n: n, e: L.e, marks: marks, me: [L.we, L.we2], left: left, right: right, braces: braces }; }
@@ -1049,7 +1113,7 @@ function bars(xn, xe, a, yn, ye, bN, diff, word) { return { t: 'bars', xn: xn, x
 
 /** ず（えもじで かく） */
 function figHtml(f) {
-  if (f.t === 'clock') return '<div class="fig clockfig">' + clockSvg(f.h, f.m, true) + '<div class="fnote">🩷 ながい はり ＝ ふん（そとの あおい かず）　⚫ みじかい はり ＝ じ</div></div>';
+  if (f.t === 'clock') return '<div class="fig clockfig">' + clockSvg(f.h, f.m, true) + '<div class="fnote">🩷 ながい はり ＝ ふん（そとの あおい かず）　⚫ みじかい はり ＝ じ' + (f.note ? '<br>💡 ' + esc(f.note) : '') + '</div></div>';
   if (f.t === 'line') {
     var cols = 'grid-template-columns:repeat(' + f.n + ',1fr)', up = '', dn = '', items = '';
     f.braces.forEach(function (b) {
@@ -1104,7 +1168,7 @@ function practiceProblems(pi) {
 }
 function startMath(pi) {
   var set = pi === 'today' ? dayProblems(DATA.today) : practiceProblems(pi);
-  MATH = { title: set.plan.title, icon: set.plan.icon, today: pi === 'today', qs: set.qs, i: 0, input: '', input2: '', field: 0, correct: 0, missed: false, done: false, lock: false, fig: false };
+  MATH = { title: set.plan.title, icon: set.plan.icon, today: pi === 'today', qs: set.qs, res: [], i: 0, input: '', input2: '', field: 0, correct: 0, missed: false, done: false, lock: false, fig: false };
   render(); speakQ();
 }
 function viewMath() {
@@ -1132,7 +1196,7 @@ function viewMath() {
   h += '<div class="card mq"><div class="mlv">' + MATH.icon + ' ' + esc(MATH.title) + '　' + (MATH.i + 1) + '/' + MATH.qs.length +
     '<button class="speak" onclick="speakQ()">🔊 よむ</button></div>' +
     '<div class="story">' + esc(qq.text).replace(/\n/g, '<br>') + '</div>' +
-    (qq.type === 'clock' ? '<div class="clockwrap">' + clockSvg(qq.fig.h, qq.fig.m, false) + '</div>' : '') +
+    clockView(qq) +
     '<div id="figbox">' + (MATH.fig ? figHtml(qq.fig) : '<button class="figbtn" onclick="showFig()">' + (qq.type === 'clock' ? '🔍 よみかたの ヒント' : '🔍 ずで かんがえる') + '</button>') + '</div>' +
     '<div class="expr wp"><span class="ans' + (qq.ans2 != null && MATH.field === 0 ? ' active' : '') + '" id="ans" onclick="mfield(0)">' + (MATH.input || '？') + '</span> <span class="unit">' + esc(qq.unit) + '</span>' +
     (qq.ans2 != null ? ' <span class="ans' + (MATH.field === 1 ? ' active' : '') + '" id="ans2" onclick="mfield(1)">' + (MATH.input2 || '？') + '</span> <span class="unit">' + esc(qq.unit2) + '</span>' : '') + '</div>' +
@@ -1178,6 +1242,7 @@ function mcheck() {
   var qq = qq0, ok = Number(MATH.input) === qq.ans && (qq.ans2 == null || Number(MATH.input2) === qq.ans2), a = document.getElementById('ans'), bub = document.getElementById('mbub'), dg = document.getElementById('mdog'), hint = document.getElementById('mhint');
   if (ok) {
     if (!MATH.missed) MATH.correct++;
+    MATH.res[MATH.i] = !MATH.missed;
     sound('done'); a.classList.add('right'); bub.textContent = pick(['せいかい！', 'すごい！', 'ワン！ ワン！', 'てんさい！']);
     dg.classList.remove('hop'); void dg.offsetWidth; dg.classList.add('hop'); confetti(6);
     hint.innerHTML = '<span class="shiki">' + (qq.type === 'clock' ? '' : 'しき： ') + qq.shiki + '</span>';
@@ -1190,6 +1255,7 @@ function mcheck() {
     bub.textContent = 'おしい！ ずを みて みよう';
     showFig(); hint.innerHTML = '<span class="hintq">💡 ' + esc(qq.tip) + '</span>';
   } else {
+    MATH.res[MATH.i] = false;
     MATH.lock = true; a.textContent = qq.ans; a.classList.add('teach');
     var b3 = document.getElementById('ans2'); if (b3) { b3.textContent = qq.ans2; b3.classList.add('teach'); }
     bub.textContent = 'こたえは ' + ansText(qq) + '。' + (qq.type === 'clock' ? 'はりを よく みてね' : 'ずと しきを みてね');
@@ -1205,8 +1271,15 @@ function nextQ() {
   if (MATH.i >= MATH.qs.length) { MATH.done = true; finishMath(); }
   render(); speakQ();
 }
+function qKind(qq) { return qq.type === 'clock' ? 'clock-' + (qq.sub || 'read') : qq.type; }
 function finishMath() {
   sound('level'); confetti(40);
+  try {
+    var logText = (MATH.today ? 'きょうの もんだい' : 'れんしゅう') + '｜' + MATH.title + '｜' + MATH.correct + '/' + MATH.qs.length + '｜' +
+      MATH.qs.map(function (qq, i) { return (MATH.res[i] ? '○' : '×') + qKind(qq); }).join(' ');
+    DATA.comments.push({ week: DATA.today, author: MATH_LOG_AUTHOR, text: logText, ts: new Date().toISOString() });
+    call('addComment', DATA.today, MATH_LOG_AUTHOR, logText).catch(function (e) { console.error(e); });
+  } catch (e) {}
   var t = P().tasks.filter(function (x) { return x.math; })[0], d = DATA.today;
   if (MATH.today && t && tasksFor(d).indexOf(t) >= 0 && !isDone(d, t.id)) {
     var label = t.label + '（' + MATH.title + ' ' + MATH.correct + '/' + MATH.qs.length + '）';
@@ -1221,7 +1294,7 @@ function monthMathHtml() {
     var d = mon + '-' + String(i).padStart(2, '0'), set = dayProblems(d);
     if (set.plan.title !== cur) { cur = set.plan.title; rows += '<div class="mm-head">' + set.plan.icon + ' ' + set.plan.from + '〜' + set.plan.to + 'にち：' + esc(cur) + '</div>'; }
     rows += '<details class="mm-day"' + (d === DATA.today ? ' open' : '') + '><summary>' + md(d) + '（' + DOW[dow(d)] + '）' + (d === DATA.today ? ' ← きょう' : '') + '</summary><ol>' +
-      set.qs.map(function (qq) { return '<li>' + esc(qq.text).replace(/\n/g, ' ') + (qq.type === 'clock' ? '（とけい ' + qq.fig.h + ':' + String(qq.fig.m).padStart(2, '0') + '）' : '') + '<br><b>こたえ ' + ansText(qq) + '</b>' + (qq.type === 'clock' ? '' : '（しき ' + qq.shiki + '）') + '</li>'; }).join('') + '</ol></details>';
+      set.qs.map(function (qq) { return '<li>' + esc(qq.text).replace(/\n/g, ' ') + (qq.view ? (qq.view.pick ? '（とけい ①〜③ から えらぶ）' : '（とけい ' + qq.view.h + ':' + String(qq.view.m).padStart(2, '0') + '）') : '') + '<br><b>こたえ ' + ansText(qq) + '</b>' + (qq.type === 'clock' ? '' : '（しき ' + qq.shiki + '）') + '</li>'; }).join('') + '</ol></details>';
   }
   return '<div class="card"><h3>🔢 今月のさんすう（1か月分の文章問題）</h3><div class="muted">日付ごとに決まった問題が出ます（子どもの画面と同じ）。テーマは Program.gs の math.plan で変えられます。</div>' + rows + '</div>';
 }
@@ -1250,18 +1323,19 @@ function viewAdult() {
       return '<td>' + (ts.indexOf(t) < 0 ? '–' : (isDone(d, t.id) ? '✅' : (d > DATA.today ? '' : '・'))) + '</td>';
     }).join('') + '<td>' + (moodOn(d) && moodDef(moodOn(d)) ? moodDef(moodOn(d)).emoji : '') + '</td></tr>';
   }
-  var wc = DATA.comments.filter(function (c) { return c.week === ADULT_WEEK; });
+  var wc = letters().filter(function (c) { return c.week === ADULT_WEEK; });
   var hist = '';
   for (var j = 0; j < 8; j++) {
     var w2 = addDays(thisWeek, -7 * j), s2 = weekSummary(w2);
     hist += '<tr><td>' + md(w2) + '〜</td><td>' + s2.stars + '</td><td>' + s2.full + '</td><td>' + s2.rate + '%</td><td>' + s2.moods + '</td><td>' +
-      DATA.comments.filter(function (c) { return c.week === w2; }).length + '</td></tr>';
+      letters().filter(function (c) { return c.week === w2; }).length + '</td></tr>';
   }
   var months = {}; DATA.records.forEach(function (r) { months[r.date.slice(0, 7)] = 1; }); months[DATA.today.slice(0, 7)] = 1;
   var mOpts = Object.keys(months).sort().reverse().map(function (m) { return '<option>' + m + '</option>'; }).join('');
 
   return '<div class="adult">' +
     '<div class="day-head"><h2>🔒 おとなよう</h2><button class="pill-btn" onclick="ADULT_OK=false;go(\'today\')">とじる</button></div>' +
+    reflectionCard() +
     '<div class="card"><h3>週を選ぶ</h3><select onchange="ADULT_WEEK=this.value;render()">' + opts + '</select>' +
     '<div class="row" style="margin-top:12px"><div>⭐ ' + s.stars + '</div><div>全部できた日 ' + s.full + '日</div><div>達成率 ' + s.rate + '%</div><div>きもち ' + (s.moods || '—') + '</div></div>' +
     '<div style="overflow-x:auto;margin-top:10px"><table class="sum"><tr><th>日</th>' + P().tasks.map(function (t) { return '<th title="' + esc(t.label) + '">' + t.icon + '</th>'; }).join('') + '<th>😊</th></tr>' + dayRows + '</table></div></div>' +
@@ -1313,8 +1387,20 @@ function buildSummary(month) {
   lines.push('', '## きもち');
   var mc = {}; DATA.moods.filter(function (m) { return m.date.indexOf(month) === 0; }).forEach(function (m) { mc[m.mood] = (mc[m.mood] || 0) + 1; });
   lines.push(p.moods.map(function (m) { return m.emoji + m.label + ': ' + (mc[m.id] || 0); }).join(' / '));
+  var rf = reflectionFor(month);
+  lines.push('', '## ⭐ ママの 月のふりかえり（来月の さんすう を決める いちばん大事な材料）');
+  if (rf) { REFLECT_FIELDS.forEach(function (f) { lines.push('### ' + f.label, (rf.fields[f.key] || '（未記入）').trim()); }); lines.push('（記入日: ' + rf.ts.slice(0, 10) + '）'); }
+  else lines.push('（まだ記入されていません。おとなよう画面の「今月のふりかえり」に ママが記入してください）');
+  lines.push('', '## さんすうの けっか（問題の種類ごと：1回目で正解 ／ 出た数）');
+  var logs = DATA.comments.filter(function (c) { return c.author === MATH_LOG_AUTHOR && c.week.indexOf(month) === 0; }), kinds = {};
+  logs.forEach(function (c) { (c.text.split('｜')[3] || '').split(' ').forEach(function (t) { if (!t) return; var k = t.slice(1); kinds[k] = kinds[k] || { ok: 0, n: 0 }; kinds[k].n++; if (t[0] === '○') kinds[k].ok++; }); });
+  var ks = Object.keys(kinds).sort(function (a, b) { return kinds[a].ok / kinds[a].n - kinds[b].ok / kinds[b].n; });
+  if (!ks.length) lines.push('（まだ ありません）');
+  else { lines.push('| 種類 | 正解/出題 | 正答率 |', '|---|---|---|'); ks.forEach(function (k) { lines.push('| ' + (KIND_NAMES[k] || k) + ' (' + k + ') | ' + kinds[k].ok + '/' + kinds[k].n + ' | ' + Math.round(kinds[k].ok / kinds[k].n * 100) + '% |'); }); }
+  lines.push('', '取り組んだ回数：' + logs.length + '回（うち きょうの もんだい ' + logs.filter(function (c) { return c.text.indexOf('きょうの') === 0; }).length + '回）');
+  lines.push('→ AI へ：ふりかえりの「にがて」と けっかを もとに、Program.gs の math.plan（日にちごとの テーマと types）・math.extras を 来月用に 組みなおしてください。');
   lines.push('', '## ママ・パパのコメント');
-  var cs = DATA.comments.filter(function (c) { return c.week >= weekStart(first) && c.week <= last; });
+  var cs = letters().filter(function (c) { return c.week >= weekStart(first) && c.week <= last; });
   if (!cs.length) lines.push('（なし）');
   cs.forEach(function (c) { lines.push('- [' + c.week + '週 / ' + c.author + '] ' + c.text.replace(/\n/g, ' ')); });
   lines.push('', '## 来月への希望（パパが書き足す）', '- ');
@@ -1366,6 +1452,68 @@ function chooseMood(m) {
   sync(call('setMood', SELECTED, m));
 }
 
+/* ---------- ママの 月のふりかえり（月に1回・こどもには みえない） ----------
+ * 保存先：コメント シート（週＝その月の 1日、だれ＝「月のふりかえり」）。Apps Script の変更は不要
+ * AI用まとめの いちばん上に のり、来月の さんすう（math.plan）を つくる 材料に なる */
+var REFLECT_AUTHOR = '月のふりかえり', MATH_LOG_AUTHOR = 'さんすうきろく';
+var KIND_NAMES = { total: 'じゅんばん：ぜんぶで', behind: 'じゅんばん：うしろには', front: 'じゅんばん：なんばんめ', ends: 'りょうはし（7＋5−1）', between: 'あいだ', behindrank: 'うしろから なんばんめ', give: '1こずつ くばる', seats: 'たりない・すわれない', gotback: 'はじめは いくつ', more: 'おおい', less: 'すくない', 'clock-read': 'とけい：よむ', 'clock-after': 'とけい：○じかん あと', 'clock-before': 'とけい：○じかん まえ', 'clock-until': 'とけい：あと なんぷん', 'clock-pick': 'とけい：えらぶ' };
+var REFLECT_FIELDS = [
+  { key: 'good', label: 'さんすう：とくいなこと・できるようになったこと', ph: '例）4＋8 のような「ぜんぶで」は 図を見なくても すぐ解ける。時計の「ちょうど」は読める' },
+  { key: 'weak', label: 'さんすう：にがてなこと（どんな問題で、どこでつまずくか）', ph: '例）「ひだりから7ばんめ、みぎから5ばんめ」で 本人を2回数えてしまう。「○じはん」で短い針が次の数字に近いと1つ先の時刻を言う' },
+  { key: 'example', label: 'じっさいに まちがえた問題・ようす（ドリルやテストから）', ph: '例）ドリル75ページ②：7＋5＝12 と書いた。図をかくと気づけた' },
+  { key: 'other', label: 'しゅくだい・ラズキッズ・どくはノートの ようす', ph: '例）ラズキッズは毎日できた。どくはノートは週末にまとめて書きがち' },
+  { key: 'next', label: '来月 力を入れたいこと・やってみたいこと', ph: '例）りょうはしの問題を多めに。時計は「あと なんぷん」を練習したい' }
+];
+var REFLECT_MONTH = null;
+function letters() { return DATA.comments.filter(function (c) { return c.author !== REFLECT_AUTHOR && c.author !== MATH_LOG_AUTHOR; }); }
+function reflectionFor(month) {
+  var rs = DATA.comments.filter(function (c) { return c.author === REFLECT_AUTHOR && c.week.slice(0, 7) === month; })
+    .sort(function (a, b) { return a.ts < b.ts ? -1 : 1; });
+  if (!rs.length) return null;
+  var last = rs[rs.length - 1], fields = {};
+  REFLECT_FIELDS.forEach(function (f) {
+    var m = last.text.split('【' + f.label + '】')[1];
+    fields[f.key] = m ? m.split('\n【')[0].trim() : '';
+  });
+  return { ts: last.ts, fields: fields, count: rs.length };
+}
+function prevMonth(m) { var d = parseD(m + '-01'); return fmtD(new Date(d.getFullYear(), d.getMonth() - 1, 1)).slice(0, 7); }
+/** 入力の じき：月の20日すぎ〜月末は 今月ぶん、1〜7日は 先月ぶんが まだなら おしらせ */
+function reflectionDue() {
+  if (!DATA) return false;
+  var day = parseD(DATA.today).getDate(), m = DATA.today.slice(0, 7);
+  if (day >= 20 && !reflectionFor(m)) return m;
+  if (day <= 7 && !reflectionFor(prevMonth(m))) return prevMonth(m);
+  return false;
+}
+function reflectionCard() {
+  var due = reflectionDue(), m = REFLECT_MONTH || due || DATA.today.slice(0, 7), rf = reflectionFor(m);
+  var opts = [DATA.today.slice(0, 7), prevMonth(DATA.today.slice(0, 7))].map(function (x) {
+    return '<option value="' + x + '"' + (x === m ? ' selected' : '') + '>' + x.replace('-', '年') + '月' + (reflectionFor(x) ? '（記入済み）' : '（未記入）') + '</option>';
+  }).join('');
+  return '<div class="card reflect' + (due ? ' due' : '') + '"><h3>📝 今月のふりかえり（ママ・月に1回）</h3>' +
+    (due ? '<div class="notice">⏰ ' + due.replace('-', '年') + '月の ふりかえりが まだです。来月の さんすうを作る いちばん大事な材料になります。</div>' : '') +
+    '<div class="muted">お子さんの「得意」「苦手」をできるだけ具体的に書いてください。子どもの画面には出ません。AI用の月まとめの いちばん上に入り、来月の さんすう問題（テーマ・種類）を決めるのに使います。</div>' +
+    '<label>どの月の ふりかえり？</label><select onchange="REFLECT_MONTH=this.value;render()">' + opts + '</select>' +
+    REFLECT_FIELDS.map(function (f) {
+      return '<label>' + esc(f.label) + '</label><textarea id="rf_' + f.key + '" placeholder="' + esc(f.ph) + '">' + esc(rf ? rf.fields[f.key] : '') + '</textarea>';
+    }).join('') +
+    '<button class="btn" onclick="saveReflection(\'' + m + '\')">ふりかえりを保存する</button>' +
+    (rf ? '<span class="muted" style="margin-left:8px">最後の保存：' + esc(rf.ts.slice(0, 16).replace('T', ' ')) + '</span>' : '') + '</div>';
+}
+function saveReflection(month) {
+  var parts = [], filled = 0;
+  REFLECT_FIELDS.forEach(function (f) {
+    var v = document.getElementById('rf_' + f.key).value.trim(); if (v) filled++;
+    parts.push('【' + f.label + '】\n' + v);
+  });
+  if (!document.getElementById('rf_good').value.trim() || !document.getElementById('rf_weak').value.trim()) return toast('「とくい」と「にがて」は かならず書いてください', true);
+  var text = parts.join('\n');
+  if (text.length > 2000) return toast('ぜんぶで2000文字までです（いま ' + text.length + '文字）', true);
+  DATA.comments.push({ week: month + '-01', author: REFLECT_AUTHOR, text: text, ts: new Date().toISOString() });
+  REFLECT_MONTH = month; render(); toast('ふりかえりを保存しました 📝');
+  sync(call('addComment', month + '-01', REFLECT_AUTHOR, text));
+}
 function sendComment() {
   var text = document.getElementById('cText').value.trim(), author = document.getElementById('cAuthor').value;
   if (!text) return toast('コメントを入力してください', true);
