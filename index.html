@@ -307,6 +307,30 @@
   .speak { float: right; background: var(--soft); border-radius: 99px; padding: 2px 10px; font-size: 13px; }
   .shiki { display: inline-block; background: var(--good-soft); color: var(--good); border-radius: 12px; padding: 2px 12px; font-size: 22px; font-weight: 900; }
   .hintq { font-size: 15px; color: var(--sub); }
+  .today-set { width: 100%; flex-direction: row; justify-content: flex-start; gap: 14px; padding: 18px; margin-bottom: 8px; background: #FFF6D6; }
+  .today-set span { font-size: 21px; } .today-set small { margin-left: auto; font-size: 14px; }
+  .subh { font-size: 15px; color: var(--sub); margin: 16px 4px 8px; }
+  .figbtn { background: #FFF1B8; border-radius: 14px; padding: 8px 16px; font-size: 16px; font-weight: 900; margin: 4px 0; box-shadow: 0 3px 0 #F0DC8C; }
+  .fig { background: #FBF7EE; border-radius: 16px; padding: 10px 8px; margin: 6px 0; }
+  .fig .frow { display: grid; align-items: end; }
+  .fig .frow.items { align-items: center; }
+  .fig .it { text-align: center; font-size: clamp(14px, 4.2vw, 26px); line-height: 1.3; }
+  .fig .it.mk { background: #FFD27A; border-radius: 50%; box-shadow: 0 0 0 2px #F0A830; }
+  .fig .it.extra { background: #FFF1B8; border-radius: 8px; box-shadow: inset 0 0 0 2px #F5C542; }
+  .fig .it.q { color: #C98A00; font-weight: 900; }
+  .fig .ln { text-align: center; color: #C7B79C; line-height: .9; }
+  .fig .br { font-size: 12px; color: var(--accent); text-align: center; white-space: nowrap; overflow: visible; }
+  .fig .br.up { border: 2px solid var(--accent); border-bottom: 0; border-radius: 10px 10px 0 0; margin: 2px 2px 0; padding-bottom: 2px; }
+  .fig .br.dn { border: 2px solid var(--sky); border-top: 0; border-radius: 0 0 10px 10px; margin: 0 2px 2px; color: var(--sky); padding-top: 2px; }
+  .fig .br span { position: relative; top: -2px; background: #FBF7EE; padding: 0 3px; }
+  .fig .fends { display: flex; justify-content: space-between; font-size: 12px; color: var(--sub); }
+  .fig .flab { font-size: 13px; color: var(--sub); text-align: left; }
+  .fig .fnote { font-size: 13px; color: #B08000; margin-top: 4px; }
+  .story { clear: both; }
+  .mm-head { margin: 12px 0 4px; font-weight: 700; }
+  .mm-day { border-bottom: 1px solid var(--line); padding: 4px 0; font-size: 14px; }
+  .mm-day summary { cursor: pointer; }
+  .mm-day ol { margin: 6px 0 6px 18px; padding: 0; } .mm-day li { margin-bottom: 6px; }
   .math-result { text-align: center; } .math-result .big-pet { font-size: 90px; }
   .math-result .q { font-size: 22px; font-weight: 900; margin: 8px 0; }
   .math-result .acts { display: flex; gap: 10px; }
@@ -865,13 +889,14 @@ function petStatusHtml() {
 }
 
 /* =====================================================================
- *  さんすう タブ：まいにち ちがう「おはなしの もんだい（ぶんしょうだい）」
- *  - その日の 日づけ ＋ コース ＋ なんかいめ で 乱数を きめるので、毎日 ちがう もんだいが でる
- *  - こたえると「しき」（7 ＋ 5 ＝ 12）を みせて、文と しきを むすびつける
- *  - 🔊 で もんだいを よみあげ（ブラウザの よみあげ きのう）
+ *  さんすう タブ：「ずに かいて かんがえる」おはなしの もんだい
+ *  - Program.gs の math.plan で「その日の テーマ」が きまる（1か月の けいかく）
+ *  - 日づけで 乱数を きめるので 毎日 ちがう もんだい。おなじ日は おなじ もんだい（やりなおし できる）
+ *  - 🔍「ずで かんがえる」で ならびや くばりかたの ずを みせる（1かい まちがえると じどうで でる）
+ *  - こたえると「しき」を みせる。2かい まちがえたら しき と こたえを みせて つぎへ（しからない）
  * ===================================================================== */
-var MATH = null, MATH_RUNS = {};
-function mathCfg() { return P().math || { count: 5, levels: [{ kind: 'add', max: 10, icon: '➕', name: 'ふえると いくつ' }] }; }
+var MATH = null;
+var R = Math.random;
 function seededRng(str) {
   var h = 1779033703 ^ str.length;
   for (var i = 0; i < str.length; i++) { h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); }
@@ -880,84 +905,180 @@ function seededRng(str) {
     var t = (h ^= h >>> 16) >>> 0; return t / 4294967296;
   };
 }
-var R = Math.random;
 function rnd(a, b) { return a + Math.floor(R() * (b - a + 1)); }
 function rpick(a) { return a[Math.floor(R() * a.length)]; }
-
-// おはなしに でてくる もの（c = かぞえかた）
-var WP = {
-  who: ['しばまる', 'うさぎさん', 'たぬきくん', 'くまさん', 'ねこさん', 'りすさん'],
-  food: [{ n: 'りんご', e: '🍎', c: 'こ' }, { n: 'みかん', e: '🍊', c: 'こ' }, { n: 'どんぐり', e: '🌰', c: 'こ' }, { n: 'あめ', e: '🍬', c: 'こ' },
-         { n: 'クッキー', e: '🍪', c: 'まい' }, { n: 'いちご', e: '🍓', c: 'こ' }, { n: 'ほね', e: '🦴', c: 'ほん' }],
-  thing: [{ n: 'えんぴつ', e: '✏️', c: 'ほん' }, { n: 'シール', e: '⭐', c: 'まい' }, { n: 'おりがみ', e: '🟥', c: 'まい' }, { n: 'ビーだま', e: '🔵', c: 'こ' }, { n: 'ほん', e: '📕', c: 'さつ' }],
-  live: [{ n: 'すずめ', e: '🐦', c: 'わ', place: 'でんせん' }, { n: 'こども', e: '🧒', c: 'にん', place: 'こうえん' }, { n: 'さかな', e: '🐟', c: 'ひき', place: 'いけ' },
-         { n: 'ねこ', e: '🐱', c: 'ひき', place: 'にわ' }, { n: 'ありさん', e: '🐜', c: 'ひき', place: 'みち' }],
-  pair: [['あかい', 'しろい'], ['おおきい', 'ちいさい'], ['きいろい', 'あおい']]
-};
-
-/** すうじの くみあわせ（max 10 = 10まで / 20 = くりあがり・くりさがり） */
-function nums(op, max) {
-  var a, b;
-  if (op === '+') {
-    if (max <= 10) { a = rnd(2, 8); b = rnd(1, 10 - a); }
-    else { a = rnd(3, 9); b = rnd(11 - a, 9); }
-    return { a: a, b: b, ans: a + b };
-  }
-  if (max <= 10) { a = rnd(4, 10); b = rnd(1, a - 1); }
-  else { a = rnd(11, 17); b = rnd(a - 9, 9); }
-  return { a: a, b: b, ans: a - b };
-}
-
-/** 1もん つくる：{ text, e(えもじ), unit, a, b, op, ans } */
-function makeQ(kind, max) {
-  if (kind === 'mix') kind = rpick(['add', 'add', 'sub', 'sub', 'cmp']);
-  var who = rpick(WP.who), t;
-  if (kind === 'add') {
-    var n = nums('+', max), k = rnd(0, 3);
-    if (k === 0) { t = rpick(WP.food); return q(who + 'は ' + t.n + 'を ' + n.a + t.c + ' もって います。\nおかあさんに ' + n.b + t.c + ' もらいました。\nぜんぶで ' + nan(t.c) + ' に なりましたか？', t, n, '+'); }
-    if (k === 1) { t = rpick(WP.live); return q(t.place + 'に ' + t.n + 'が ' + n.a + t.c + ' います。\nあとから ' + n.b + t.c + ' きました。\nみんなで ' + nan(t.c) + ' に なりましたか？', t, n, '+'); }
-    if (k === 2) { t = rpick(WP.thing); var pr = rpick(WP.pair); return q(pr[0] + ' ' + t.n + 'が ' + n.a + t.c + '、' + pr[1] + ' ' + t.n + 'が ' + n.b + t.c + ' あります。\nあわせて ' + nan(t.c) + ' ですか？', t, n, '+'); }
-    t = rpick(WP.thing); return q(who + 'は ' + t.n + 'を ' + n.a + t.c + ' もって います。\nきょう ' + n.b + t.c + ' かいました。\nぜんぶで ' + nan(t.c) + ' ですか？', t, n, '+');
-  }
-  if (kind === 'sub') {
-    var m = nums('-', max), j = rnd(0, 3);
-    if (j === 0) { t = rpick(WP.food); return q(t.n + 'が ' + m.a + t.c + ' あります。\n' + who + 'が ' + m.b + t.c + ' たべました。\nのこりは ' + nan(t.c) + ' ですか？', t, m, '−'); }
-    if (j === 1) { t = rpick(WP.live); return q(t.place + 'に ' + t.n + 'が ' + m.a + t.c + ' いました。\n' + m.b + t.c + ' かえりました。\nのこりは ' + nan(t.c) + ' ですか？', t, m, '−'); }
-    if (j === 2) { t = rpick(WP.thing); return q(who + 'は ' + t.n + 'を ' + m.a + t.c + ' もって います。\nともだちに ' + m.b + t.c + ' あげました。\nのこりは ' + nan(t.c) + ' ですか？', t, m, '−'); }
-    t = rpick(WP.food); return q('おさらに ' + t.n + 'が ' + m.a + t.c + ' あります。\n' + m.b + t.c + ' おとうとに わけました。\nおさらには ' + nan(t.c) + ' のこって いますか？', t, m, '−');
-  }
-  // cmp：ちがいは いくつ
-  var c = nums('-', max), pr2 = rpick(WP.pair), i = rnd(0, 1);
-  if (i === 0) { t = rpick(WP.thing); return q(pr2[0] + ' ' + t.n + 'が ' + c.a + t.c + '、' + pr2[1] + ' ' + t.n + 'が ' + c.b + t.c + ' あります。\n' + pr2[0] + ' ' + t.n + 'は ' + nan(t.c) + ' おおいですか？', t, c, '−'); }
-  t = rpick(WP.live); return q(t.place + 'に ' + pr2[0] + ' ' + t.n + 'が ' + c.a + t.c + '、' + pr2[1] + ' ' + t.n + 'が ' + c.b + t.c + ' います。\nちがいは ' + nan(t.c) + ' ですか？', t, c, '−');
-}
-/** なん＋かぞえかた（ほん→ぼん、ひき→びき） */
 function nan(c) { return 'なん' + ({ 'ほん': 'ぼん', 'ひき': 'びき' }[c] || c); }
-function q(text, t, n, op) { return { text: text, e: t.e, unit: t.c, a: n.a, b: n.b, op: op, ans: n.ans }; }
 
-function startMath(i) {
-  var lv = mathCfg().levels[i], qs = [], seen = {};
-  var key = DATA.today + '|' + i; MATH_RUNS[key] = (MATH_RUNS[key] || 0) + 1;
-  R = seededRng(key + '|' + MATH_RUNS[key]);
-  var guard = 0;
-  while (qs.length < (mathCfg().count || 5) && guard++ < 200) {
-    var one = makeQ(lv.kind, lv.max || 10), k = one.a + one.op + one.b;
-    if (seen[k]) continue; seen[k] = 1; qs.push(one);
+function mathCfg() { return P().math || { count: 4, plan: [{ from: 1, to: 31, icon: '🚃', title: 'じゅんばんと かず', types: ['total', 'behind', 'front'] }] }; }
+function planFor(d) {
+  var day = parseD(d).getDate(), ps = mathCfg().plan || [];
+  return ps.filter(function (p) { return day >= p.from && day <= p.to; })[0] || ps[0];
+}
+
+// ならぶ もの（who / who2 ＝ もんだいに でてくる 2ひき・2人。we ＝ その 子の えもじ）
+var LINES = [
+  { n: 'ねこ',   c: 'ひき', e: '🐱', who: 'たま',     we: '😺', who2: 'みけ',     we2: '😸', v: 'います' },
+  { n: 'いぬ',   c: 'ひき', e: '🐕', who: 'しばまる', we: '🐶', who2: 'ぽち',     we2: '🐩', v: 'います' },
+  { n: 'こども', c: 'にん', e: '🧒', who: 'はなこさん', we: '👧', who2: 'たろうさん', we2: '👦', v: 'います' },
+  { n: 'こども', c: 'にん', e: '🧒', who: 'たろうさん', we: '👦', who2: 'はなこさん', we2: '👧', v: 'います' },
+  { n: 'くるま', c: 'だい', e: '🚙', who: 'あかい くるま', we: '🚗', who2: 'バス', we2: '🚌', v: 'います' },
+  { n: 'うさぎ', c: 'ひき', e: '🐰', who: 'みみ',     we: '🐇', who2: 'ぴょん',   we2: '🐇', v: 'います' }
+];
+var GIVES = [
+  { n: 'あめ', c: 'こ', e: '🍬' }, { n: 'えんぴつ', c: 'ほん', e: '✏️' }, { n: 'シール', c: 'まい', e: '⭐' },
+  { n: 'りんご', c: 'こ', e: '🍎' }, { n: 'クッキー', c: 'まい', e: '🍪' }, { n: 'ほね', c: 'ほん', e: '🦴' }
+];
+var TAKERS = [{ n: 'こども', c: 'にん', e: '🧒' }, { n: 'うさぎ', c: 'ひき', e: '🐰' }, { n: 'いぬ', c: 'ひき', e: '🐕' }];
+var SEATS = [
+  { a: 'いす', ac: 'こ', ae: '🪑', b: 'こども', bc: 'にん', be: '🧒', act: '1にん 1こずつ すわると、すわれない こども' },
+  { a: 'かさ', ac: 'ほん', ae: '☂️', b: 'こども', bc: 'にん', be: '🧒', act: '1にん 1ぽんずつ さすと、かさが ない こども' },
+  { a: 'おさら', ac: 'まい', ae: '🍽️', b: 'ケーキ', bc: 'こ', be: '🍰', act: '1まいに 1こずつ のせると、おさらに のらない ケーキ' },
+  { a: 'ぼうし', ac: 'こ', ae: '🧢', b: 'いぬ', bc: 'ひき', be: '🐕', act: '1ぴきに 1こずつ かぶせると、ぼうしが ない いぬ' }
+];
+var COMPARE = [
+  { x: 'あかい おはじき', y: 'あおい おはじき', c: 'こ', ex: '🔴', ey: '🔵', v: 'あります' },
+  { x: 'しばまるの ほね', y: 'ぽちの ほね', c: 'ほん', ex: '🦴', ey: '🦴', v: 'あります' },
+  { x: 'しろい はな', y: 'きいろい はな', c: 'ほん', ex: '🌼', ey: '🌻', v: 'さいて います' },
+  { x: 'たまの どんぐり', y: 'みけの どんぐり', c: 'こ', ex: '🌰', ey: '🌰', v: 'あります' },
+  { x: 'すずめ', y: 'はと', c: 'わ', ex: '🐦', ey: '🕊️', v: 'います' }
+];
+
+/** 1もん つくる：{ type, text, unit, ans, shiki, fig } */
+function makeWQ(type) {
+  var L = rpick(LINES), c = L.c, a, b, n;
+  if (type === 'total') {
+    a = rnd(3, 9); b = rnd(3, 9); n = a + b;
+    return W(type, L.n + 'が 1れつに ならんで ' + L.v + '。\n' + L.who + 'は まえから ' + a + 'ばんめ です。\n' + L.who + 'の うしろには ' + b + c + ' ' + L.v + '。\n' + L.n + 'は ぜんぶで ' + nan(c) + ' ' + L.v.replace('ます', 'ますか') + '？',
+      c, n, a + ' ＋ ' + b + ' ＝ ' + n,
+      line(L, n, [a - 1], 'まえ', 'うしろ', [{ f: 0, t: a - 1, l: a + c, up: 1 }, { f: a, t: n - 1, l: b + c, up: 1 }]));
+  }
+  if (type === 'behind') {
+    n = rnd(9, 15); a = rnd(3, n - 3);
+    return W(type, L.n + 'が ' + n + c + ' 1れつに ならんで ' + L.v + '。\n' + L.who + 'は まえから ' + a + 'ばんめ です。\n' + L.who + 'の うしろには ' + nan(c) + ' ' + L.v.replace('ます', 'ますか') + '？',
+      c, n - a, n + ' − ' + a + ' ＝ ' + (n - a),
+      line(L, n, [a - 1], 'まえ', 'うしろ', [{ f: 0, t: a - 1, l: 'まえから ' + a, up: 1 }, { f: a, t: n - 1, l: '？', up: 1 }, { f: 0, t: n - 1, l: 'ぜんぶで ' + n + c, up: 0 }]));
+  }
+  if (type === 'front') {
+    a = rnd(4, 11); n = a + 1 + rnd(1, 3);
+    return W(type, L.n + 'が 1れつに ならんで ' + L.v + '。\n' + L.who + 'の まえには ' + a + c + ' ' + L.v + '。\n' + L.who + 'は まえから なんばんめ ですか？',
+      'ばんめ', a + 1, a + ' ＋ 1 ＝ ' + (a + 1),
+      line(L, n, [a], 'まえ', 'うしろ', [{ f: 0, t: a - 1, l: a + c, up: 1 }, { f: 0, t: a, l: 'まえから ？ばんめ', up: 0 }]));
+  }
+  if (type === 'ends') {
+    a = rnd(3, 9); b = rnd(3, 9); n = a + b - 1;
+    return W(type, L.n + 'が よこに 1れつに ならんで ' + L.v + '。\n' + L.who + 'は ひだりから ' + a + 'ばんめ、みぎから ' + b + 'ばんめ です。\n' + L.n + 'は みんなで ' + nan(c) + ' ' + L.v.replace('ます', 'ますか') + '？',
+      c, n, a + ' ＋ ' + b + ' − 1 ＝ ' + n,
+      line(L, n, [a - 1], 'ひだり', 'みぎ', [{ f: 0, t: a - 1, l: 'ひだりから ' + a, up: 1 }, { f: a - 1, t: n - 1, l: 'みぎから ' + b, up: 0 }]),
+      L.who + 'を 2かい かぞえて いないかな？');
+  }
+  if (type === 'between') {
+    a = rnd(2, 6); b = a + rnd(3, 8); n = b + rnd(1, 3);
+    return W(type, L.n + 'が 1れつに ならんで ' + L.v + '。\n' + L.who + 'は まえから ' + a + 'ばんめ、' + L.who2 + 'は まえから ' + b + 'ばんめ です。\n' + L.who + 'と ' + L.who2 + 'の あいだには ' + nan(c) + ' ' + L.v.replace('ます', 'ますか') + '？',
+      c, b - a - 1, b + ' − ' + a + ' − 1 ＝ ' + (b - a - 1),
+      line(L, n, [a - 1, b - 1], 'まえ', 'うしろ', [{ f: 0, t: a - 1, l: a + 'ばんめ', up: 1 }, { f: 0, t: b - 1, l: b + 'ばんめ', up: 0 }, { f: a, t: b - 2, l: '？', up: 1 }]),
+      L.who2 + 'は かぞえて いないかな？');
+  }
+  if (type === 'behindrank') {
+    n = rnd(9, 15); a = rnd(3, n - 2);
+    return W(type, L.n + 'が ' + n + c + ' 1れつに ならんで ' + L.v + '。\n' + L.who + 'は まえから ' + a + 'ばんめ です。\n' + L.who + 'は うしろから かぞえると なんばんめ ですか？',
+      'ばんめ', n - a + 1, n + ' − ' + a + ' ＋ 1 ＝ ' + (n - a + 1),
+      line(L, n, [a - 1], 'まえ', 'うしろ', [{ f: 0, t: a - 1, l: 'まえから ' + a, up: 1 }, { f: a - 1, t: n - 1, l: 'うしろから ？', up: 0 }]),
+      L.who + 'も いれて かぞえよう');
+  }
+  if (type === 'give' || type === 'gotback') {
+    var g = rpick(GIVES), tk = rpick(TAKERS);
+    b = rnd(5, 9); var left = rnd(2, 7); a = b + left;
+    if (type === 'give') return W(type, g.n + 'が ' + a + g.c + ' あります。\n' + b + tk.c + 'の ' + tk.n + 'に 1' + g.c + 'ずつ あげると、\n' + g.n + 'は ' + nan(g.c) + ' のこりますか？',
+      g.c, left, a + ' − ' + b + ' ＝ ' + left, pair(g.n, g.e, a, tk.n, tk.e, b, 'のこり ？'), tk.n + 'の かずだけ ' + g.n + 'が へるね');
+    return W(type, b + tk.c + 'の ' + tk.n + 'が ' + g.n + 'を 1' + g.c + 'ずつ もらいました。\nすると ' + g.n + 'は ' + left + g.c + ' のこりました。\n' + g.n + 'は はじめに ' + nan(g.c) + ' ありましたか？',
+      g.c, a, b + ' ＋ ' + left + ' ＝ ' + a, pair(g.n, g.e, a, tk.n, tk.e, b, 'のこり ' + left + g.c), 'もらった ぶんと のこりを あわせよう');
+  }
+  if (type === 'seats') {
+    var st = rpick(SEATS); a = rnd(5, 10); b = a + rnd(2, 6);
+    return W(type, st.a + 'が ' + a + st.ac + ' あります。' + st.b + 'は ' + b + st.bc + ' います。\n' + st.act + 'は ' + nan(st.bc) + ' ですか？',
+      st.bc, b - a, b + ' − ' + a + ' ＝ ' + (b - a), pair(st.a, st.ae, a, st.b, st.be, b, '？'), '1つずつ せんで むすんで みよう');
+  }
+  // more / less
+  var cp = rpick(COMPARE);
+  a = rnd(5, 12); b = rnd(2, 6);
+  if (type === 'more') return W(type, cp.x + 'は ' + a + cp.c + ' ' + cp.v + '。\n' + cp.y + 'は ' + cp.x + 'より ' + b + cp.c + ' おおい そうです。\n' + cp.y + 'は ' + nan(cp.c) + ' ですか？',
+    cp.c, a + b, a + ' ＋ ' + b + ' ＝ ' + (a + b), bars(cp.x, cp.ex, a, cp.y, cp.ey, a + b, b, 'おおい'), 'おおい ほうは たしざん かな？');
+  if (a - b < 2) a = b + rnd(2, 6);
+  return W('less', cp.x + 'は ' + a + cp.c + ' ' + cp.v + '。\n' + cp.y + 'は ' + cp.x + 'より ' + b + cp.c + ' すくない そうです。\n' + cp.y + 'は ' + nan(cp.c) + ' ですか？',
+    cp.c, a - b, a + ' − ' + b + ' ＝ ' + (a - b), bars(cp.x, cp.ex, a, cp.y, cp.ey, a - b, b, 'すくない'), 'すくない ほうは ひきざん かな？');
+}
+function W(type, text, unit, ans, shiki, fig, tip) { return { type: type, text: text, unit: unit, ans: ans, shiki: shiki, fig: fig, tip: tip || 'ずを みて かぞえて みよう' }; }
+function line(L, n, marks, left, right, braces) { return { t: 'line', n: n, e: L.e, marks: marks, me: [L.we, L.we2], left: left, right: right, braces: braces }; }
+function pair(an, ae, a, bn, be, b, rest) { return { t: 'pair', an: an, ae: ae, a: a, bn: bn, be: be, b: b, rest: rest }; }
+function bars(xn, xe, a, yn, ye, bN, diff, word) { return { t: 'bars', xn: xn, xe: xe, a: a, yn: yn, ye: ye, b: bN, diff: diff, word: word }; }
+
+/** ず（えもじで かく） */
+function figHtml(f) {
+  if (f.t === 'line') {
+    var cols = 'grid-template-columns:repeat(' + f.n + ',1fr)', up = '', dn = '', items = '';
+    f.braces.forEach(function (b) {
+      var el = '<div class="br ' + (b.up ? 'up' : 'dn') + '" style="grid-column:' + (b.f + 1) + '/' + (b.t + 2) + '"><span>' + esc(b.l) + '</span></div>';
+      if (b.up) up += el; else dn += el;
+    });
+    for (var i = 0; i < f.n; i++) {
+      var mi = f.marks.indexOf(i);
+      items += '<span class="it' + (mi >= 0 ? ' mk' : '') + '">' + (mi >= 0 ? f.me[mi] : f.e) + '</span>';
+    }
+    return '<div class="fig"><div class="fends"><span>' + esc(f.left) + '</span><span>' + esc(f.right) + '</span></div>' +
+      '<div class="frow" style="' + cols + '">' + up + '</div><div class="frow items" style="' + cols + '">' + items + '</div><div class="frow" style="' + cols + '">' + dn + '</div></div>';
+  }
+  if (f.t === 'pair') {
+    var m = Math.max(f.a, f.b), cs = 'grid-template-columns:repeat(' + m + ',1fr)', r1 = '', r2 = '', r3 = '';
+    for (var j = 0; j < m; j++) {
+      r1 += '<span class="it' + (j >= f.b && j < f.a ? ' extra' : '') + '">' + (j < f.a ? f.ae : '') + '</span>';
+      r2 += '<span class="ln">' + (j < Math.min(f.a, f.b) ? '│' : '') + '</span>';
+      r3 += '<span class="it' + (j >= f.a && j < f.b ? ' extra' : '') + '">' + (j < f.b ? f.be : '') + '</span>';
+    }
+    return '<div class="fig"><div class="flab">' + esc(f.an) + ' ' + f.a + '</div><div class="frow items" style="' + cs + '">' + r1 + '</div>' +
+      '<div class="frow" style="' + cs + '">' + r2 + '</div><div class="frow items" style="' + cs + '">' + r3 + '</div><div class="flab">' + esc(f.bn) + ' ' + f.b + '</div>' +
+      '<div class="fnote">🟡 ＝ ' + esc(f.rest) + '</div></div>';
+  }
+  var mm = Math.max(f.a, f.b), cs2 = 'grid-template-columns:repeat(' + mm + ',1fr)', x = '', y = '';
+  for (var k = 0; k < mm; k++) {
+    x += '<span class="it' + (f.word === 'すくない' && k >= f.b && k < f.a ? ' extra' : '') + '">' + (k < f.a ? f.xe : '') + '</span>';
+    y += '<span class="it' + (f.word === 'おおい' && k >= f.a ? ' extra q' : '') + '">' + (k < f.b ? (f.word === 'おおい' && k >= f.a ? '？' : f.ye) : '') + '</span>';
+  }
+  return '<div class="fig"><div class="flab">' + esc(f.xn) + '</div><div class="frow items" style="' + cs2 + '">' + x + '</div>' +
+    '<div class="flab">' + esc(f.yn) + '</div><div class="frow items" style="' + cs2 + '">' + (f.word === 'おおい' ? y : y.replace(/<span class="it">(?!<)/g, '<span class="it">')) + '</div>' +
+    '<div class="fnote">🟡 ＝ ' + f.diff + ' ' + esc(f.word) + '</div></div>';
+}
+
+/** その日の もんだい（日づけで きまる） */
+function dayProblems(d) {
+  var pl = planFor(d), cnt = mathCfg().count || 4, out = [], seen = {};
+  R = seededRng('wp|' + d);
+  for (var i = 0, g = 0; out.length < cnt && g < 80; g++) {
+    var qq = makeWQ(pl.types[i % pl.types.length]);
+    if (seen[qq.text]) continue; seen[qq.text] = 1; out.push(qq); i++;
   }
   R = Math.random;
-  MATH = { lv: lv, qs: qs, i: 0, input: '', correct: 0, missed: false, done: false, lock: false };
+  return { plan: pl, qs: out };
+}
+function practiceProblems(pi) {
+  var pl = mathCfg().plan[pi], out = [];
+  for (var i = 0; i < (mathCfg().count || 4); i++) out.push(makeWQ(pl.types[Math.floor(Math.random() * pl.types.length)]));
+  return { plan: pl, qs: out };
+}
+function startMath(pi) {
+  var set = pi === 'today' ? dayProblems(DATA.today) : practiceProblems(pi);
+  MATH = { title: set.plan.title, icon: set.plan.icon, today: pi === 'today', qs: set.qs, i: 0, input: '', correct: 0, missed: false, done: false, lock: false, fig: false };
   render(); speakQ();
 }
 function viewMath() {
-  var cfg = mathCfg(), t = P().tasks.filter(function (x) { return x.math; })[0];
-  var doneToday = t && isDone(DATA.today, t.id);
+  var t = P().tasks.filter(function (x) { return x.math; })[0], doneToday = t && isDone(DATA.today, t.id), pl = planFor(DATA.today);
   var h = '<div class="day-head"><h2>🔢 さんすう</h2>' + (MATH ? '<button class="pill-btn" onclick="MATH=null;render()">やめる</button>' : '') + '</div>';
   if (!MATH) {
     h += '<div class="math-intro"><span class="mdog">' + dogFaceHtml() + '</span><div class="mbub">' +
-      (doneToday ? 'きょうの さんすう できたね！<br>もっと やっても いいよ 🎵' : 'きょうの おはなし もんだい だよ！<br>' + (cfg.count || 5) + 'もん とけたら ⭐と 🦴！') + '</div></div>';
-    h += '<div class="levels">' + cfg.levels.map(function (lv, i) {
-      return '<button class="level" onclick="startMath(' + i + ')"><b>' + lv.icon + '</b><span>' + esc(lv.name) + '</span><small>' + esc(lv.sub || '') + '</small></button>';
-    }).join('') + '</div><div class="muted" style="text-align:center;margin-top:12px">もんだいは まいにち かわるよ</div>';
+      (doneToday ? 'きょうの もんだい できたね！<br>れんしゅうも できるよ 🎵' : 'ずに かいて かんがえよう！<br>' + (mathCfg().count || 4) + 'もん とけたら ⭐と 🦴！') + '</div></div>';
+    h += '<button class="level today-set" onclick="startMath(\'today\')"><b>' + pl.icon + '</b><span>きょうの もんだい</span><small>' + esc(pl.title) + (doneToday ? ' ✅' : '') + '</small></button>';
+    h += '<h3 class="subh">れんしゅう（いつでも ちがう もんだい）</h3><div class="levels">' + mathCfg().plan.map(function (p, i) {
+      return '<button class="level" onclick="startMath(' + i + ')"><b>' + p.icon + '</b><span>' + esc(p.title) + '</span></button>';
+    }).join('') + '</div>';
     return h;
   }
   if (MATH.done) {
@@ -965,27 +1086,29 @@ function viewMath() {
     return h + '<div class="card math-result"><div class="big-pet">' + dogFaceHtml() + '</div>' +
       '<div class="q">' + n + 'もん中 ' + c + 'もん<br>いっかいで せいかい！</div>' +
       '<div class="rstars">' + '⭐'.repeat(Math.max(1, Math.round(c / n * 5))) + '</div>' +
-      '<div class="muted" style="margin:8px 0 14px">' + (c === n ? 'ぜんもん せいかい！ しばまるも びっくり！' : c >= n * 0.6 ? 'すごい！ その ちょうし！' : 'さいごまで がんばったね！') + '</div>' +
-      '<div class="acts"><button class="no" onclick="MATH=null;render()">ほかの もんだい</button><button class="yes" onclick="go(\'today\')">きょうに もどる</button></div></div>';
+      '<div class="muted" style="margin:8px 0 14px">' + (c === n ? 'ぜんもん せいかい！ しばまるも びっくり！' : c >= n / 2 ? 'すごい！ ずを かくと わかるね！' : 'むずかしい もんだい、さいごまで がんばったね！') + '</div>' +
+      '<div class="acts"><button class="no" onclick="MATH=null;render()">もどる</button><button class="yes" onclick="go(\'today\')">きょうに もどる</button></div></div>';
   }
   var qq = MATH.qs[MATH.i];
   h += '<div class="mprog">' + MATH.qs.map(function (_, i) { return '<i class="' + (i < MATH.i ? 'ok' : i === MATH.i ? 'now' : '') + '"></i>'; }).join('') + '</div>';
-  h += '<div class="card mq"><div class="mlv">' + MATH.lv.icon + ' ' + esc(MATH.lv.name) + '　' + (MATH.i + 1) + '/' + MATH.qs.length +
+  h += '<div class="card mq"><div class="mlv">' + MATH.icon + ' ' + esc(MATH.title) + '　' + (MATH.i + 1) + '/' + MATH.qs.length +
     '<button class="speak" onclick="speakQ()">🔊 よむ</button></div>' +
-    '<div class="story"><span class="se">' + qq.e + '</span>' + esc(qq.text).replace(/\n/g, '<br>') + '</div>' +
+    '<div class="story">' + esc(qq.text).replace(/\n/g, '<br>') + '</div>' +
+    '<div id="figbox">' + (MATH.fig ? figHtml(qq.fig) : '<button class="figbtn" onclick="showFig()">🔍 ずで かんがえる</button>') + '</div>' +
     '<div class="expr wp"><span class="ans" id="ans">' + (MATH.input || '？') + '</span> <span class="unit">' + esc(qq.unit) + '</span></div>' +
     '<div class="mhint" id="mhint"></div>' +
-    '<div class="msmall"><span class="mdog sm" id="mdog">' + dogFaceHtml() + '</span><span class="mbub sm" id="mbub">よく よんでね！</span></div></div>';
+    '<div class="msmall"><span class="mdog sm" id="mdog">' + dogFaceHtml() + '</span><span class="mbub sm" id="mbub">もんだいを きちんと よもう！</span></div></div>';
   h += '<div class="keypad">' + [7, 8, 9, 4, 5, 6, 1, 2, 3].map(function (k) { return '<button onclick="mkey(' + k + ')">' + k + '</button>'; }).join('') +
     '<button class="sub" onclick="mkey(\'del\')">⌫</button><button onclick="mkey(0)">0</button><button class="go" onclick="mkey(\'ok\')">こたえる</button></div>';
   return h;
 }
+function showFig() { if (!MATH) return; MATH.fig = true; var b = document.getElementById('figbox'); if (b) b.innerHTML = figHtml(MATH.qs[MATH.i].fig); sound('step'); }
 function speakQ() {
   try {
     if (!SOUND || !MATH || MATH.done || !window.speechSynthesis) return;
     speechSynthesis.cancel();
     var u = new SpeechSynthesisUtterance(MATH.qs[MATH.i].text.replace(/\n/g, '。'));
-    u.lang = 'ja-JP'; u.rate = 0.9; speechSynthesis.speak(u);
+    u.lang = 'ja-JP'; u.rate = 0.85; speechSynthesis.speak(u);
   } catch (e) {}
 }
 function dogFaceHtml() { var st = dogStage(), it = wornItem(); return '<span class="dogmini">' + (st.emoji === '🐾' ? '🐶' : st.emoji) + (it ? '<span class="acc">' + it.emoji + '</span>' : '') + '</span>'; }
@@ -997,46 +1120,53 @@ function mkey(k) {
   sound('step');
   var a = document.getElementById('ans'); if (a) a.textContent = MATH.input || '？';
 }
-function shiki(qq) { return qq.a + ' ' + qq.op + ' ' + qq.b + ' ＝ ' + qq.ans; }
 function mcheck() {
   if (!MATH.input) return;
-  var qq = MATH.qs[MATH.i], ok = Number(MATH.input) === qq.ans, a = document.getElementById('ans'), bub = document.getElementById('mbub'), dg = document.getElementById('mdog');
+  var qq = MATH.qs[MATH.i], ok = Number(MATH.input) === qq.ans, a = document.getElementById('ans'), bub = document.getElementById('mbub'), dg = document.getElementById('mdog'), hint = document.getElementById('mhint');
   if (ok) {
     if (!MATH.missed) MATH.correct++;
     sound('done'); a.classList.add('right'); bub.textContent = pick(['せいかい！', 'すごい！', 'ワン！ ワン！', 'てんさい！']);
     dg.classList.remove('hop'); void dg.offsetWidth; dg.classList.add('hop'); confetti(6);
-    document.getElementById('mhint').innerHTML = '<span class="shiki">しき： ' + shiki(qq) + '</span>';
-    MATH.lock = true;
-    setTimeout(nextQ, 1700);
+    hint.innerHTML = '<span class="shiki">しき： ' + qq.shiki + '</span>';
+    MATH.lock = true; setTimeout(nextQ, 2200);
   } else if (!MATH.missed) {
     MATH.missed = true; MATH.input = ''; sound('pet');
     a.textContent = '？'; a.classList.add('shake'); setTimeout(function () { a.classList.remove('shake'); }, 500);
-    bub.textContent = 'おしい！ もう いちど よんでみよう';
-    document.getElementById('mhint').innerHTML = '<span class="hintq">' + (qq.op === '+' ? 'ふえる おはなし？ へる おはなし？' : 'へる？ それとも くらべる？') + '</span>';
+    bub.textContent = 'おしい！ ずを みて みよう';
+    showFig(); hint.innerHTML = '<span class="hintq">💡 ' + esc(qq.tip) + '</span>';
   } else {
-    // 2かいめも ちがったら、しき と ●の ずで こたえを みせて つぎへ（しからない）
     MATH.lock = true; a.textContent = qq.ans; a.classList.add('teach');
-    bub.textContent = 'こたえは ' + qq.ans + qq.unit + ' だよ。つぎ いこう！';
-    document.getElementById('mhint').innerHTML = '<span class="shiki">しき： ' + shiki(qq) + '</span><br>' + dotsHint(qq);
-    setTimeout(nextQ, 3600);
+    bub.textContent = 'こたえは ' + qq.ans + qq.unit + '。ずと しきを みてね';
+    showFig(); hint.innerHTML = '<span class="shiki">しき： ' + qq.shiki + '</span>';
+    var go2 = document.createElement('button'); go2.className = 'figbtn'; go2.textContent = 'わかった！ つぎへ ▶';
+    go2.onclick = nextQ; hint.appendChild(document.createElement('br')); hint.appendChild(go2);
   }
 }
-function dotsHint(qq) {
-  if (qq.op === '+') return '<span class="dots">' + '●'.repeat(qq.a) + '</span> ＋ <span class="dots b">' + '●'.repeat(qq.b) + '</span>';
-  return '<span class="dots">' + '●'.repeat(qq.ans) + '<s>' + '●'.repeat(qq.b) + '</s></span>';
-}
 function nextQ() {
-  MATH.i++; MATH.input = ''; MATH.missed = false; MATH.lock = false;
+  if (!MATH) return;
+  MATH.i++; MATH.input = ''; MATH.missed = false; MATH.lock = false; MATH.fig = false;
   if (MATH.i >= MATH.qs.length) { MATH.done = true; finishMath(); }
   render(); speakQ();
 }
 function finishMath() {
   sound('level'); confetti(40);
   var t = P().tasks.filter(function (x) { return x.math; })[0], d = DATA.today;
-  if (t && tasksFor(d).indexOf(t) >= 0 && !isDone(d, t.id)) {
-    var label = t.label + '（' + MATH.lv.name + ' ' + MATH.correct + '/' + MATH.qs.length + '）';
+  if (MATH.today && t && tasksFor(d).indexOf(t) >= 0 && !isDone(d, t.id)) {
+    var label = t.label + '（' + MATH.title + ' ' + MATH.correct + '/' + MATH.qs.length + '）';
     setTimeout(function () { markDone(d, t, label, true); }, 300);
   }
+}
+
+/** おとなよう：今月の さんすう（1か月ぶん）の いちらん */
+function monthMathHtml() {
+  var mon = DATA.today.slice(0, 7), d0 = parseD(mon + '-01'), last = new Date(d0.getFullYear(), d0.getMonth() + 1, 0).getDate(), rows = '', cur = '';
+  for (var i = 1; i <= last; i++) {
+    var d = mon + '-' + String(i).padStart(2, '0'), set = dayProblems(d);
+    if (set.plan.title !== cur) { cur = set.plan.title; rows += '<div class="mm-head">' + set.plan.icon + ' ' + set.plan.from + '〜' + set.plan.to + 'にち：' + esc(cur) + '</div>'; }
+    rows += '<details class="mm-day"' + (d === DATA.today ? ' open' : '') + '><summary>' + md(d) + '（' + DOW[dow(d)] + '）' + (d === DATA.today ? ' ← きょう' : '') + '</summary><ol>' +
+      set.qs.map(function (qq) { return '<li>' + esc(qq.text).replace(/\n/g, ' ') + '<br><b>こたえ ' + qq.ans + qq.unit + '</b>（しき ' + qq.shiki + '）</li>'; }).join('') + '</ol></details>';
+  }
+  return '<div class="card"><h3>🔢 今月のさんすう（1か月分の文章問題）</h3><div class="muted">日付ごとに決まった問題が出ます（子どもの画面と同じ）。テーマは Program.gs の math.plan で変えられます。</div>' + rows + '</div>';
 }
 
 /* ---------- おとなよう ---------- */
@@ -1088,6 +1218,7 @@ function viewAdult() {
 
     '<div class="card"><h3>📊 最近8週間</h3><div style="overflow-x:auto"><table class="sum"><tr><th>週</th><th>⭐</th><th>完了日</th><th>達成率</th><th>きもち</th><th>コメント</th></tr>' + hist + '</table></div></div>' +
 
+    monthMathHtml() +
     '<div class="card"><h3>🤖 AI に渡す月まとめ（パパ用）</h3>' +
     '<div class="muted">月を選んで作成 → コピーして Claude に貼り付け、来月の Program.gs を一緒に作ります（docs/monthly-update.md 参照）。</div>' +
     '<div class="row" style="margin-top:8px"><select id="sumMonth">' + mOpts + '</select><button class="btn sub" style="margin-top:0" onclick="makeSummary()">まとめを作る</button></div>' +

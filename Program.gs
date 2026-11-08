@@ -33,19 +33,27 @@ var PROGRAM = {
     { id: 'sansu',    label: 'さんすう',        icon: '🔢', stars: 1, math: true,             hint: 'もんだいに ちょうせん！' }
   ],
 
-  // さんすう タブ：まいにち ちがう「おはなしの もんだい（ぶんしょうだい）」が でる
-  //  1かいで count もん。とくと「さんすう」が できた！に なる
-  //  kind: add = ふえると いくつ / sub = のこりは いくつ / cmp = ちがいは いくつ / mix = まぜまぜ
-  //  max:  10 = こたえや かずが 10まで / 20 = くりあがり・くりさがり（11〜18）
+  // さんすう タブ：「ずに かいて かんがえる」おはなしの もんだい（1か月ぶんの けいかく）
+  //  その日の 日にちで「テーマ」が きまり、まいにち ちがう もんだいが count もん でる（日づけで きまるので おなじ日は おなじ もんだい）
+  //  types（もんだいの しゅるい）:
+  //    total     … まえから ○ばんめ、うしろに △ → ぜんぶで（4＋8）
+  //    behind    … ○にん ならぶ、まえから △ばんめ → うしろには なんにん（12−5）
+  //    front     … まえに ○にん → なんばんめ（5＋1）
+  //    ends      … ひだりから ○ばんめ・みぎから △ばんめ → みんなで（7＋5−1）
+  //    between   … ○ばんめと △ばんめの あいだは なんにん（9−3−1）
+  //    behindrank… まえから ○ばんめは うしろから なんばんめ（12−5＋1）
+  //    give      … ○こを △にんに 1こずつ → のこりは（15−8）
+  //    seats     … いす ○こ・こども △にん → すわれないのは（11−8）
+  //    gotback   … △にんが 1こずつ とって ○こ のこった → はじめは（6＋5）
+  //    more/less … ○より △ おおい／すくない → いくつ（7＋4／12−5）
   math: {
-    count: 5,
-    levels: [
-      { kind: 'add', max: 10, icon: '➕', name: 'ふえると いくつ',   sub: 'たしざんの おはなし' },
-      { kind: 'sub', max: 10, icon: '➖', name: 'のこりは いくつ',   sub: 'ひきざんの おはなし' },
-      { kind: 'cmp', max: 10, icon: '⚖️', name: 'ちがいは いくつ',   sub: 'くらべる おはなし' },
-      { kind: 'add', max: 20, icon: '🔼', name: 'くりあがりの おはなし', sub: '8 ＋ 5 など' },
-      { kind: 'sub', max: 20, icon: '🔽', name: 'くりさがりの おはなし', sub: '13 − 6 など' },
-      { kind: 'mix', max: 20, icon: '🎲', name: 'まぜまぜ',         sub: 'ぜんぶ でる' }
+    count: 4,
+    plan: [
+      { from: 1,  to: 7,  icon: '🚃', title: 'じゅんばんと かず',   types: ['total', 'behind', 'front'] },
+      { from: 8,  to: 14, icon: '↔️', title: 'りょうはしと あいだ', types: ['ends', 'between', 'total', 'ends'] },
+      { from: 15, to: 21, icon: '🍬', title: '1こずつ くばると',     types: ['give', 'seats', 'gotback', 'give'] },
+      { from: 22, to: 28, icon: '⚖️', title: 'おおい・すくない',     types: ['more', 'less', 'more', 'less'] },
+      { from: 29, to: 31, icon: '🏆', title: 'まとめ チャレンジ',    types: ['ends', 'behindrank', 'between', 'seats', 'gotback', 'less'] }
     ]
   },
 
